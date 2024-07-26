@@ -1,8 +1,7 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
 const { Schema } = mongoose;
-const bcrypt = require("bcrypt");
-const Order = require("./Order");
 
 const userSchema = new Schema({
   firstName: {
@@ -25,7 +24,18 @@ const userSchema = new Schema({
     required: true,
     minlength: 5,
   },
-  orders: [Order.schema],
+  orders: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Order",
+    },
+  ],
+  feedbacks: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Feedback",
+    },
+  ],
 });
 
 // set up pre-save middleware to create password
