@@ -10,19 +10,21 @@ const productSchema = new Schema({
   },
   description: {
     type: String,
+    required: true,
+    trim: true,
   },
   image: {
     type: String,
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    min: 0,
   },
   price: {
     type: Number,
     required: true,
     min: 0.99,
-  },
-  quantity: {
-    type: Number,
-    min: 0,
-    default: 0,
   },
   category: {
     type: Schema.Types.ObjectId,
