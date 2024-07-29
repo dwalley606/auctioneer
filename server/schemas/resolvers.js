@@ -37,9 +37,13 @@ const resolvers = {
     login: async (_, { email, password }) => {
       return await actions.login(email, password);
     },
-    createUser: async (_, { username, email, password }, context) => {
+    createUser: async (
+      _,
+      { firstName, lastName, email, password },
+      context
+    ) => {
       if (!context.user) throw new Error("Authentication required");
-      return await actions.createUser(username, email, password);
+      return await actions.createUser(firstName, lastName, email, password);
     },
     createProduct: async (
       _,

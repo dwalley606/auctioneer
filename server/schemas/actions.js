@@ -7,6 +7,7 @@ const Auction = require("../models/Auction");
 const Bid = require("../models/Bid");
 const Payment = require("../models/Payment");
 const Notification = require("../models/Notification");
+const { ObjectId } = require("mongoose");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
@@ -35,8 +36,8 @@ const login = async (email, password) => {
 };
 
 // User Actions
-const createUser = async (username, email, password) => {
-  const user = new User({ username, email, password });
+const createUser = async (firstName, lastName, email, password) => {
+  const user = new User({ firstName, lastName, email, password });
   return await user.save();
 };
 
@@ -48,14 +49,16 @@ const getUsers = async () => {
 const createProduct = async (
   name,
   description,
-  startingPrice,
+  quantity,
+  price,
   categoryId,
   sellerId
 ) => {
   const product = new Product({
     name,
     description,
-    startingPrice,
+    quantity,
+    price,
     category: categoryId,
     seller: sellerId,
   });
@@ -95,9 +98,16 @@ const getOrders = async () => {
 };
 
 // Feedback Actions
-const createFeedback = async (userId, productId, rating, comment) => {
+const createFeedback = async (
+  fromUserId,
+  toUserId,
+  productId,
+  rating,
+  comment
+) => {
   const feedback = new Feedback({
-    user: userId,
+    fromUser: fromUserId,
+    toUser: toUserId,
     product: productId,
     rating,
     comment,

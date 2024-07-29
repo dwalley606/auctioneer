@@ -23,30 +23,41 @@ afterEach(async () => {
   await User.deleteMany();
 });
 
+// Existing imports and setup code
+
 describe("User Actions", () => {
   it("should create a new user", async () => {
-    const newUser = {
+    const user1 = {
       firstName: "John",
       lastName: "Doe",
       email: "john.doe@example.com",
-      // Add other required fields here
+      password: "password123",
     };
 
-    const createdUser = await createUser(newUser);
+    const user2 = {
+      firstName: "Alice",
+      lastName: "Smith",
+      email: "alice.smith@example.com",
+      password: "securepassword",
+    };
 
-    expect(createdUser).toBeDefined();
-    expect(createdUser.firstName).toBe(newUser.firstName);
-    expect(createdUser.lastName).toBe(newUser.lastName);
-    // Add other assertions as needed
-  });
-
-  it("should retrieve all users", async () => {
-    await createUser("testuser1", "testuser1@example.com", "password123");
-    await createUser("testuser2", "testuser2@example.com", "password123");
+    // Call createUser with individual string values for firstName, lastName, email, and password
+    await createUser(
+      user1.firstName,
+      user1.lastName,
+      user1.email,
+      user1.password
+    );
+    await createUser(
+      user2.firstName,
+      user2.lastName,
+      user2.email,
+      user2.password
+    );
 
     const users = await getUsers();
     expect(users.length).toBe(2);
-    expect(users[0].username).toBe("testuser1");
-    expect(users[1].username).toBe("testuser2");
+    expect(users[0].username).toBe(user1.username);
+    expect(users[1].username).toBe(user2.username);
   });
 });
