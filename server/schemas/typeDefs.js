@@ -1,78 +1,109 @@
-const typeDefs = `
-  type Category {
-    _id: ID
-    name: String
+const { gql } = require('apollo-server-express');
+
+const typeDefs = gql`
+  type User {
+    id: ID!
+    username: String!
+    email: String!
+    products: [Product]
+    bids: [Bid]
+    orders: [Order]
+    feedbacks: [Feedback]
+    wishlist: [Product]
+    notifications: [Notification]
   }
 
   type Product {
-    _id: ID
-    name: String
-    description: String
-    image: String
-    quantity: Int
-    price: Float
-    category: Category
+    id: ID!
+    name: String!
+    description: String!
+    startingPrice: Float!
+    category: Category!
+    seller: User!
+    bids: [Bid]
+    feedbacks: [Feedback]
+    auction: Auction!
   }
 
-  type Order {
-    _id: ID
-    purchaseDate: String
+  type Category {
+    id: ID!
+    name: String!
     products: [Product]
   }
 
-  type User {
-    _id: ID
-    firstName: String
-    lastName: String
-    email: String
-    orders: [Order]
-    feedbacks: [Feedback]
+  type Order {
+    id: ID!
+    buyer: User!
+    product: Product!
+    amount: Float!
+    payment: Payment!
   }
 
   type Feedback {
-    _id: ID
-    rating: Int
-    comment: String
-    fromUser: User
-    toUser: User
-    createdAt: String
+    id: ID!
+    user: User!
+    product: Product!
+    rating: Int!
+    comment: String!
   }
 
-  type Checkout {
-    session: ID
+  type Auction {
+    id: ID!
+    product: Product!
+    startTime: String!
+    endTime: String!
+    startingPrice: Float!
+    bids: [Bid]
+    status: String!
   }
 
-  type Auth {
-    token: ID
-    user: User
+  type Bid {
+    id: ID!
+    user: User!
+    product: Product!
+    amount: Float!
+    timestamp: String!
   }
 
-  input ProductInput {
-    _id: ID
-    purchaseQuantity: Int
-    name: String
-    image: String
-    price: Float
-    quantity: Int
+  type Payment {
+    id: ID!
+    order: Order!
+    method: String!
+    status: String!
+    transactionId: String!
+  }
+
+  type Notification {
+    id: ID!
+    user: User!
+    message: String!
+    read: Boolean!
+    timestamp: String!
   }
 
   type Query {
+    users: [User]
+    products: [Product]
     categories: [Category]
-    products(category: ID, name: String): [Product]
-    product(_id: ID!): Product
-    user: User
-    order(_id: ID!): Order
-    checkout(products: [ProductInput]): Checkout
+    orders: [Order]
+    feedbacks: [Feedback]
+    auctions: [Auction]
+    bids: [Bid]
+    payments: [Payment]
+    notifications: [Notification]
   }
 
   type Mutation {
-    addUser(firstName: String!, lastName: String!, email: String!, password: String!): Auth
-    addOrder(products: [ID]!): Order
-    updateUser(firstName: String, lastName: String, email: String, password: String): User
-    updateProduct(_id: ID!, quantity: Int!): Product
-    login(email: String!, password: String!): Auth
-    addFeedback(rating: Int!, comment: String, toUser: ID!): Feedback
+    createUser(username: String!, email: String!): User
+    createProduct(name: String!, description: String!, startingPrice: Float!, categoryId: ID!): Product
+    createCategory(name: String!): Category
+    createBid(productId: ID!, amount: Float!): Bid
+    createOrder(productId: ID!): Order
+    createFeedback(productId: ID!, rating: Int!, comment: String!): Feedback
+    createPayment(orderId: ID!, method: String!): Payment
+    createNotification(userId: ID!, message: String!): Notification
   }
 `;
 
 module.exports = typeDefs;
+
