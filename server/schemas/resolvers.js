@@ -1,161 +1,118 @@
-const { User, Product, Category, Order, Feedback } = require("../models");
-const { signToken, AuthenticationError } = require("../utils/auth");
-const stripe = require("stripe")("sk_test_4eC39HqLyjWDarjtT1zdp7dc");
+const actions = require("../actions");
 
 const resolvers = {
   Query: {
+    users: async () => {
+      return await actions.getUsers();
+    },
+    products: async () => {
+      return await actions.getProducts();
+    },
     categories: async () => {
-      return await Category.find();
+      return await actions.getCategories();
     },
-    products: async (parent, { category, name }) => {
-      const params = {};
-
-      if (category) {
-        params.category = category;
-      }
-
-      if (name) {
-        params.name = {
-          $regex: name,
-        };
-      }
-
-      return await Product.find(params).populate("category");
+    orders: async () => {
+      return await actions.getOrders();
     },
-    product: async (parent, { _id }) => {
-      return await Product.findById(_id).populate("category");
+    feedbacks: async () => {
+      return await actions.getFeedbacks();
     },
-    user: async (parent, args, context) => {
-      if (context.user) {
-        const user = await User.findById(context.user._id)
-          .populate({
-            path: "orders.products",
-            populate: "category",
-          })
-          .populate("feedbacks");
-
-        user.orders.sort((a, b) => b.purchaseDate - a.purchaseDate);
-
-        return user;
-      }
-
-      throw new AuthenticationError("Not logged in");
+    auctions: async () => {
+      return await actions.getAuctions();
     },
-    order: async (parent, { _id }, context) => {
-      if (context.user) {
-        const user = await User.findById(context.user._id).populate({
-          path: "orders.products",
-          populate: "category",
-        });
-
-        return user.orders.id(_id);
-      }
-
-      throw new AuthenticationError("Not logged in");
+    bids: async () => {
+      return await actions.getBids();
     },
-    checkout: async (parent, args, context) => {
-      const url = new URL(context.headers.referer).origin;
-      await Order.create({ products: args.products.map(({ _id }) => _id) });
-      const line_items = [];
-
-      for (const product of args.products) {
-        line_items.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: product.name,
-              description: product.description,
-              images: [`${url}/images/${product.image}`],
-            },
-            unit_amount: product.price * 100,
-          },
-          quantity: product.purchaseQuantity,
-        });
-      }
-
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        line_items,
-        mode: "payment",
-        success_url: `${url}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${url}/`,
-      });
-
-      return { session: session.id };
+    payments: async () => {
+      return await actions.getPayments();
+    },
+    notifications: async () => {
+      return await actions.getNotifications();
     },
   },
   Mutation: {
-    addUser: async (parent, { firstName, lastName, email, password }) => {
-      const user = await User.create({ firstName, lastName, email, password });
-      const token = signToken(user);
-
-      return { token, user };
+    signup: async (_, { username, email, password }) => {
+      return await actions.signup(username, email, password);
     },
-    addOrder: async (parent, { products }, context) => {
-      if (context.user) {
-        const order = new Order({ products });
-
-        await User.findByIdAndUpdate(context.user._id, {
-          $push: { orders: order },
-        });
-
-        return order;
-      }
-
-      throw new AuthenticationError("Not logged in");
+    login: async (_, { email, password }) => {
+      return await actions.login(email, password);
     },
-    updateUser: async (parent, args, context) => {
-      if (context.user) {
-        return await User.findByIdAndUpdate(context.user._id, args, {
-          new: true,
-        });
-      }
-
-      throw new AuthenticationError("Not logged in");
+    createUser: async (
+      _,
+      { firstName, lastName, email, password },
+      context
+    ) => {
+      if (!context.user) throw new Error("Authentication required");
+      return await actions.createUser(firstName, lastName, email, password);
     },
-    updateProduct: async (parent, { _id, quantity }) => {
-      const decrement = Math.abs(quantity) * -1;
-
-      return await Product.findByIdAndUpdate(
-        _id,
-        { $inc: { quantity: decrement } },
-        { new: true }
+    createProduct: async (
+      _,
+      { name, description, startingPrice, categoryId, sellerId },
+      context
+    ) => {
+      if (!context.user) throw new Error("Authentication required");
+      return await actions.createProduct(
+        name,
+        description,
+        startingPrice,
+        categoryId,
+        sellerId
       );
     },
-    login: async (parent, { email, password }) => {
-      const user = await User.findOne({ email });
-
-      if (!user) {
-        throw new AuthenticationError("Incorrect credentials");
-      }
-
-      const correctPw = await user.isCorrectPassword(password);
-
-      if (!correctPw) {
-        throw new AuthenticationError("Incorrect credentials");
-      }
-
-      const token = signToken(user);
-
-      return { token, user };
+    createCategory: async (_, { name }, context) => {
+      if (!context.user) throw new Error("Authentication required");
+      return await actions.createCategory(name);
     },
-    addFeedback: async (parent, { rating, comment, toUser }, context) => {
-      if (context.user) {
-        const feedback = await Feedback.create({
-          rating,
-          comment,
-          fromUser: context.user._id,
-          toUser,
-        });
-
-        await User.findByIdAndUpdate(toUser, {
-          $push: { feedbacks: feedback },
-        });
-
-        return feedback;
-      }
-
-      throw new AuthenticationError("Not logged in");
+    createOrder: async (
+      _,
+      { buyerId, productId, amount, paymentId },
+      context
+    ) => {
+      if (!context.user) throw new Error("Authentication required");
+      return await actions.createOrder(buyerId, productId, amount, paymentId);
+    },
+    createFeedback: async (
+      _,
+      { userId, productId, rating, comment },
+      context
+    ) => {
+      if (!context.user) throw new Error("Authentication required");
+      return await actions.createFeedback(userId, productId, rating, comment);
+    },
+    createAuction: async (
+      _,
+      { productId, startTime, endTime, startingPrice, status },
+      context
+    ) => {
+      if (!context.user) throw new Error("Authentication required");
+      return await actions.createAuction(
+        productId,
+        startTime,
+        endTime,
+        startingPrice,
+        status
+      );
+    },
+    createBid: async (_, { userId, productId, amount }, context) => {
+      if (!context.user) throw new Error("Authentication required");
+      return await actions.createBid(userId, productId, amount);
+    },
+    createPayment: async (
+      _,
+      { orderId, method, status, transactionId },
+      context
+    ) => {
+      if (!context.user) throw new Error("Authentication required");
+      return await actions.createPayment(
+        orderId,
+        method,
+        status,
+        transactionId
+      );
+    },
+    createNotification: async (_, { userId, message }, context) => {
+      if (!context.user) throw new Error("Authentication required");
+      return await actions.createNotification(userId, message);
     },
   },
 };
