@@ -1,4 +1,4 @@
-const { gql } = require('apollo-server-express');
+const { gql } = require("apollo-server-express");
 
 const typeDefs = gql`
   type User {
@@ -11,6 +11,11 @@ const typeDefs = gql`
     feedbacks: [Feedback]
     wishlist: [Product]
     notifications: [Notification]
+  }
+
+  type AuthPayload {
+    token: String!
+    user: User!
   }
 
   type Product {
@@ -94,8 +99,15 @@ const typeDefs = gql`
   }
 
   type Mutation {
+    signup(username: String!, email: String!, password: String!): AuthPayload
+    login(email: String!, password: String!): AuthPayload
     createUser(username: String!, email: String!): User
-    createProduct(name: String!, description: String!, startingPrice: Float!, categoryId: ID!): Product
+    createProduct(
+      name: String!
+      description: String!
+      startingPrice: Float!
+      categoryId: ID!
+    ): Product
     createCategory(name: String!): Category
     createBid(productId: ID!, amount: Float!): Bid
     createOrder(productId: ID!): Order
@@ -106,4 +118,3 @@ const typeDefs = gql`
 `;
 
 module.exports = typeDefs;
-
