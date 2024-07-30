@@ -45,4 +45,18 @@ function Nav() {
             )
         }
     }
+    return(
+        <header className='flex-row px-1'>
+            <h1>
+                <Link to='/'>
+                    Auctioneer
+                </Link>
+            </h1>
+            <nav>
+                {showNavigation()}
+            </nav>
+        </header>
+    );
 }
+
+export default Nav;
