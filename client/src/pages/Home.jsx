@@ -1,8 +1,8 @@
 const Home = () => {
     return (
         <div>
-            <h1>Welcome to the Home Page</h1>
-            <p>This is the content of the home page.</p>
+            <h1>Welcome to Auctioneer</h1>
+            <p>The place to find whatever you may need! From furniture, clothing, tools, gadgets, and more, Auctioneer is where you can find it!</p>
         </div>
     );
 }
