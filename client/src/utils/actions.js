@@ -1,20 +1,20 @@
 // client/src/actions.js
 
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation } from "@apollo/client";
 import {
   GET_PRODUCTS,
   GET_PRODUCT_DETAILS,
   GET_USER_PROFILE,
   GET_AUCTIONS,
   GET_CATEGORIES,
-} from './graphql/queries';
+} from "./queries";
 import {
   LOGIN_USER,
   SIGNUP_USER,
   CREATE_PRODUCT,
   PLACE_BID,
   CREATE_ORDER,
-} from './graphql/mutations';
+} from "./mutations";
 
 export const useGetProducts = () => {
   return useQuery(GET_PRODUCTS);
