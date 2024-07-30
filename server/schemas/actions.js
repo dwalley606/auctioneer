@@ -12,13 +12,19 @@ const { ObjectId } = require("mongoose");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
+// User Actions
 const generateToken = (user) => {
   return jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 };
 
-const signup = async (username, email, password) => {
+const signup = async (firstName, lastName, email, password) => {
   const hashedPassword = await bcrypt.hash(password, 10);
-  const user = new User({ username, email, password: hashedPassword });
+  const user = new User({
+    firstName,
+    lastName,
+    email,
+    password: hashedPassword,
+  });
   await user.save();
   const token = generateToken(user);
   return { token, user };
@@ -26,19 +32,13 @@ const signup = async (username, email, password) => {
 
 const login = async (email, password) => {
   const user = await User.findOne({ email });
-  if (!user) throw new Error("User not found");
+  if (!user) throw new Error("Invalid credentials");
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new Error("Invalid credentials");
 
   const token = generateToken(user);
   return { token, user };
-};
-
-// User Actions
-const createUser = async (firstName, lastName, email, password) => {
-  const user = new User({ firstName, lastName, email, password });
-  return await user.save();
 };
 
 const getUsers = async () => {
@@ -143,8 +143,21 @@ const getAuctions = async () => {
 
 // Bid Actions
 const createBid = async (userId, productId, amount) => {
-  const bid = new Bid({ user: userId, product: productId, amount });
-  return await bid.save();
+  const bid = new Bid({
+    user: userId,
+    product: productId,
+    amount,
+    timestamp: new Date(),
+  });
+  const createdBid = await bid.save();
+
+  return {
+    _id: createdBid._id,
+    user: createdBid.user,
+    product: createdBid.product,
+    amount: createdBid.amount,
+    timestamp: createdBid.timestamp,
+  };
 };
 
 const getBids = async () => {
@@ -168,8 +181,21 @@ const getPayments = async () => {
 
 // Notification Actions
 const createNotification = async (userId, message) => {
-  const notification = new Notification({ user: userId, message });
-  return await notification.save();
+  const notification = new Notification({
+    user: userId,
+    message,
+    read: false,
+    timestamp: new Date(),
+  });
+  const createdNotification = await notification.save();
+
+  return {
+    _id: createdNotification._id,
+    user: createdNotification.user,
+    message: createdNotification.message,
+    read: createdNotification.read,
+    timestamp: createdNotification.timestamp,
+  };
 };
 
 const getNotifications = async () => {
@@ -179,7 +205,6 @@ const getNotifications = async () => {
 module.exports = {
   signup,
   login,
-  createUser,
   getUsers,
   createProduct,
   getProducts,
