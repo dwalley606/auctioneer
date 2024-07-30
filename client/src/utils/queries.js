@@ -1,70 +1,86 @@
 import { gql } from '@apollo/client';
 
-export const QUERY_PRODUCTS = gql`
-  query getProducts($category: ID) {
-    products(category: $category) {
-      _id
-      name
-      description
-      price
-      quantity
-      image
-      category {
-        _id
-      }
-    }
-  }
-`;
-
-export const QUERY_CHECKOUT = gql`
-  query getCheckout($products: [ID]!) {
-    checkout(products: $products) {
-      session
-    }
-  }
-`;
-
-export const QUERY_ALL_PRODUCTS = gql`
-  {
+export const GET_PRODUCTS = gql`
+  query GetProducts {
     products {
-      _id
+      id
       name
       description
       price
-      quantity
       category {
+        id
         name
       }
+      auction {
+        id
+        startTime
+        endTime
+        status
+      }
     }
   }
 `;
 
-export const QUERY_CATEGORIES = gql`
-  {
-    categories {
-      _id
+export const GET_PRODUCT_DETAILS = gql`
+  query GetProductDetails($id: ID!) {
+    product(id: $id) {
+      id
       name
+      description
+      price
+      category {
+        id
+        name
+      }
+      auction {
+        id
+        startTime
+        endTime
+        status
+      }
     }
   }
 `;
 
-export const QUERY_USER = gql`
-  {
-    user {
-      firstName
-      lastName
+export const GET_USER_PROFILE = gql`
+  query GetUserProfile {
+    userProfile {
+      id
+      username
+      email
+      products {
+        id
+        name
+      }
       orders {
-        _id
-        purchaseDate
-        products {
-          _id
+        id
+        product {
           name
-          description
-          price
-          quantity
-          image
         }
       }
+    }
+  }
+`;
+
+export const GET_AUCTIONS = gql`
+  query GetAuctions {
+    auctions {
+      id
+      product {
+        name
+      }
+      startTime
+      endTime
+      status
+    }
+  }
+`;
+
+export const GET_CATEGORIES = gql`
+  query GetCategories {
+    categories {
+      id
+      name
     }
   }
 `;

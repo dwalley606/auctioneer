@@ -1,51 +1,73 @@
-import { gql } from "@apollo/client";
+import { gql } from '@apollo/client';
 
-export const LOGIN = gql`
-  mutation login($email: String!, $password: String!) {
+export const LOGIN_USER = gql`
+  mutation LoginUser($email: String!, $password: String!) {
     login(email: $email, password: $password) {
       token
       user {
-        _id
+        id
+        username
       }
     }
   }
 `;
 
-export const ADD_ORDER = gql`
-  mutation addOrder($products: [ID]!) {
-    addOrder(products: $products) {
-      purchaseDate
-      products {
-        _id
-        name
-        description
-        price
-        quantity
-        category {
-          name
-        }
-      }
-    }
-  }
-`;
-
-export const ADD_USER = gql`
-  mutation addUser(
-    $firstName: String!
-    $lastName: String!
-    $email: String!
-    $password: String!
-  ) {
-    addUser(
-      firstName: $firstName
-      lastName: $lastName
-      email: $email
-      password: $password
-    ) {
+export const SIGNUP_USER = gql`
+  mutation SignupUser($username: String!, $email: String!, $password: String!) {
+    signup(username: $username, email: $email, password: $password) {
       token
       user {
-        _id
+        id
+        username
       }
     }
   }
 `;
+
+export const CREATE_PRODUCT = gql`
+  mutation CreateProduct($name: String!, $description: String!, $price: Float!, $categoryId: ID!) {
+    createProduct(name: $name, description: $description, price: $price, categoryId: $categoryId) {
+      id
+      name
+      description
+      price
+      category {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const PLACE_BID = gql`
+  mutation PlaceBid($productId: ID!, $amount: Float!) {
+    placeBid(productId: $productId, amount: $amount) {
+      id
+      user {
+        id
+        username
+      }
+      amount
+      timestamp
+    }
+  }
+`;
+
+export const CREATE_ORDER = gql`
+  mutation CreateOrder($productId: ID!) {
+    createOrder(productId: $productId) {
+      id
+      product {
+        id
+        name
+      }
+      amount
+      payment {
+        id
+        method
+        status
+      }
+    }
+  }
+`;
+
