@@ -6,6 +6,11 @@ function Nav() {
         if (Auth.loggedIn()) {
             return(
                 <ul className='flex-row'>
+                    <li className = 'mx-1'>
+                        <Link to='/Home'>
+                            Home
+                        </Link>
+                    </li>
                     <li className='mx-1'>
                         <Link to='/currentBids'>
                             Current Bids
