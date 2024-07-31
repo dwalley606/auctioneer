@@ -1,4 +1,4 @@
-const actions = require("../actions");
+const actions = require("./actions");
 
 const resolvers = {
   Query: {
@@ -31,8 +31,8 @@ const resolvers = {
     },
   },
   Mutation: {
-    signup: async (_, { username, email, password }) => {
-      return await actions.signup(username, email, password);
+    signup: async (_, { firstName, lastName, email, password }) => {
+      return await actions.signup(firstName, lastName, email, password);
     },
     login: async (_, { email, password }) => {
       return await actions.login(email, password);

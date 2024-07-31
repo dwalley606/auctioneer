@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from "@apollo/client";
 
 export const GET_PRODUCTS = gql`
   query GetProducts {
@@ -62,6 +62,42 @@ export const GET_USER_PROFILE = gql`
   }
 `;
 
+export const GET_USERS = gql`
+  query GetUsers {
+    users {
+      id
+      username
+      email
+      products {
+        id
+        name
+      }
+      bids {
+        id
+        amount
+      }
+      orders {
+        id
+        amount
+      }
+      feedbacks {
+        id
+        rating
+      }
+      wishlist {
+        id
+        name
+      }
+      notifications {
+        id
+        message
+        read
+        timestamp
+      }
+    }
+  }
+`;
+
 export const GET_AUCTIONS = gql`
   query GetAuctions {
     auctions {
@@ -81,6 +117,44 @@ export const GET_CATEGORIES = gql`
     categories {
       id
       name
+    }
+  }
+`;
+
+export const GET_ORDERS = gql`
+  query GetOrders {
+    orders {
+      id
+      buyer {
+        id
+        username
+      }
+      product {
+        id
+        name
+      }
+      amount
+      payment {
+        id
+        method
+        status
+        transactionId
+      }
+    }
+  }
+`;
+
+export const GET_PAYMENTS = gql`
+  query GetPayments {
+    payments {
+      id
+      order {
+        id
+        amount
+      }
+      method
+      status
+      transactionId
     }
   }
 `;
