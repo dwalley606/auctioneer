@@ -1,5 +1,13 @@
 import { jwtDecode } from "jwt-decode";
 
+export const saveToken = (token) => {
+  console.log("Saving token:", token); // Debugging line
+  if (token) {
+    document.cookie = `access_token=${token}; path=/; SameSite=None; Secure`;
+    console.log("Token saved in cookie:", document.cookie); // Debugging line
+  }
+};
+
 class AuthService {
   getProfile() {
     return jwtDecode(this.getToken());

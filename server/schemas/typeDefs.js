@@ -114,6 +114,13 @@ const typeDefs = gql`
     createFeedback(productId: ID!, rating: Int!, comment: String!): Feedback
     createPayment(orderId: ID!, method: String!): Payment
     createNotification(userId: ID!, message: String!): Notification
+    createAuction(
+      productId: ID!
+      startTime: String!
+      endTime: String!
+      startingPrice: Float!
+      status: String!
+    ): Auction
   }
 `;
 
