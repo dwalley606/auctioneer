@@ -17,11 +17,16 @@ const generateToken = (user) => {
   return jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 };
 
-const signup = async (firstName, lastName, email, password) => {
+const signup = async (username, email, password) => {
+  console.log("Signup called with:", { username, email, password });
+
+  if (!password) {
+    throw new Error("Password is required");
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
   const user = new User({
-    firstName,
-    lastName,
+    username,
     email,
     password: hashedPassword,
   });
