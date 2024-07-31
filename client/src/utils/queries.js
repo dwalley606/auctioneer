@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from "@apollo/client";
 
 export const GET_PRODUCTS = gql`
   query GetProducts {
@@ -11,8 +11,12 @@ export const GET_PRODUCTS = gql`
         id
         name
       }
-      auction {
+      seller {
         id
+        username
+      }
+      auction {
+id
         startTime
         endTime
         status
@@ -32,8 +36,12 @@ export const GET_PRODUCT_DETAILS = gql`
         id
         name
       }
-      auction {
+      seller {
         id
+        username
+      }
+      auction {
+id
         startTime
         endTime
         status
@@ -48,6 +56,7 @@ export const GET_USER_PROFILE = gql`
       id
       username
       email
+      photoUrl
       products {
         id
         name
@@ -67,10 +76,19 @@ export const GET_AUCTIONS = gql`
     auctions {
       id
       product {
+        id
         name
       }
       startTime
       endTime
+      startingPrice
+      bids {
+        amount
+        user {
+          id
+          username
+        }
+      }
       status
     }
   }
@@ -81,6 +99,20 @@ export const GET_CATEGORIES = gql`
     categories {
       id
       name
+    }
+  }
+`;
+
+export const GOOGLE_SIGN_IN = gql`
+  mutation GoogleSignIn($input: GoogleSignInInput!) {
+    googleSignIn(input: $input) {
+      token
+      user {
+        id
+        username
+        email
+        photoUrl
+      }
     }
   }
 `;

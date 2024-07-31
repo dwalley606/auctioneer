@@ -1,5 +1,3 @@
-// client/src/actions.js
-
 import { useQuery, useMutation } from "@apollo/client";
 import {
   GET_PRODUCTS,
@@ -14,6 +12,7 @@ import {
   CREATE_PRODUCT,
   PLACE_BID,
   CREATE_ORDER,
+  GOOGLE_SIGN_IN,
 } from "./mutations";
 
 export const useGetProducts = () => {
@@ -56,4 +55,8 @@ export const usePlaceBid = () => {
 
 export const useCreateOrder = () => {
   return useMutation(CREATE_ORDER);
+};
+
+export const useGoogleSignIn = () => {
+  return useMutation(GOOGLE_SIGN_IN);
 };
