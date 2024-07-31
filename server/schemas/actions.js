@@ -27,6 +27,10 @@ const signup = async (firstName, lastName, email, password) => {
   });
   await user.save();
   const token = generateToken(user);
+
+  // Log the generated token to the console
+  console.log("Generated Token:", token);
+
   return { token, user };
 };
 
