@@ -1,130 +1,41 @@
 import {
-  useGetProducts,
-  useGetProductDetails,
-  useGetUserProfile,
-  useGetAuctions,
-  useGetCategories,
-  useLoginUser,
-  useSignupUser,
-  useCreateProduct,
-  useCreateOrder,
-  useUpdateCategory,
+  UPDATE_PRODUCTS,
+  ADD_TO_CART,
+  UPDATE_CART_QUANTITY,
+  REMOVE_FROM_CART,
+  ADD_MULTIPLE_TO_CART,
+  UPDATE_CATEGORIES,
+  UPDATE_CURRENT_CATEGORY,
+  CLEAR_CART,
+  TOGGLE_CART,
 } from "./actions";
 
+// The reducer is a function that accepts the current state and an action. It returns a new state based on that action.
 export const reducer = (state, action) => {
   switch (action.type) {
-    case "GET_PRODUCTS":
+    // Returns a copy of state with an update products array. We use the action.products property and spread it's contents into the new array.
+    case UPDATE_PRODUCTS:
       return {
         ...state,
-        products: useGetProducts(),
+        products: [...action.products],
       };
 
-    case "GET_PRODUCT_DETAILS":
+    case UPDATE_CATEGORIES:
       return {
         ...state,
-        productDetails: useGetProductDetails(action.id),
+        categories: [...action.categories],
       };
 
-    case "GET_USER_PROFILE":
+    case UPDATE_CURRENT_CATEGORY:
       return {
         ...state,
-        userProfile: useGetUserProfile(),
+        currentCategory: action.currentCategory,
       };
 
-    case "GET_USERS":
+    case TOGGLE_CART:
       return {
         ...state,
-        users: useGetUsers(),
-      };
-
-    case "GET_ORDERS":
-      return {
-        ...state,
-        orders: useGetOrders(),
-      };
-
-    case "GET_PAYMENTS":
-      return {
-        ...state,
-        payments: useGetPayments(),
-      };
-
-    case "GET_AUCTIONS":
-      return {
-        ...state,
-        auctions: useGetAuctions(),
-      };
-
-    case "GET_CATEGORIES":
-      return {
-        ...state,
-        categories: useGetCategories(),
-      };
-
-    case "LOGIN_USER":
-      return {
-        ...state,
-        user: useLoginUser(),
-      };
-
-    case "SIGNUP_USER":
-      return {
-        ...state,
-        newUser: useSignupUser(),
-      };
-
-    case "CREATE_PRODUCT":
-      return {
-        ...state,
-        newProduct: useCreateProduct(),
-      };
-
-    case "CREATE_BID":
-      return {
-        ...state,
-        bidResult: useCreateBid(),
-      };
-
-    case "CREATE_ORDER":
-      return {
-        ...state,
-        orderResult: useCreateOrder(),
-      };
-
-    case "CREATE_CATEGORY":
-      return {
-        ...state,
-        categoryResult: useCreateCategory(),
-      };
-
-    case "UPDATE_CATEGORY":
-      return {
-        ...state,
-        categoryUpdateResult: useUpdateCategory(),
-      };
-
-    case "CREATE_FEEDBACK":
-      return {
-        ...state,
-        feedbackResult: useCreateFeedback(),
-      };
-
-    case "CREATE_PAYMENT":
-      return {
-        ...state,
-        paymentResult: useCreatePayment(),
-      };
-
-    case "CREATE_NOTIFICATION":
-      return {
-        ...state,
-        notificationResult: useCreateNotification(),
-      };
-
-    case "CREATE_AUCTION":
-      return {
-        ...state,
-        auctionResult: useCreateAuction(),
+        cartOpen: !state.cartOpen,
       };
     default:
       return state;

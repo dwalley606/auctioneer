@@ -1,5 +1,3 @@
-// client/src/actions.js
-
 import { useQuery, useMutation } from "@apollo/client";
 import {
   GET_PRODUCTS,
@@ -23,6 +21,7 @@ import {
   CREATE_PAYMENT,
   CREATE_NOTIFICATION,
   CREATE_AUCTION,
+  GOOGLE_SIGN_IN,
 } from "./mutations";
 
 export const useGetProducts = () => {
@@ -102,3 +101,19 @@ export const useCreateNotification = () => {
 export const useCreateAuction = () => {
   return useMutation(CREATE_AUCTION);
 };
+
+export const useGoogleSignIn = () => {
+  return useMutation(GOOGLE_SIGN_IN);
+};
+
+export const UPDATE_PRODUCTS = "UPDATE_PRODUCTS";
+
+export const ADD_TO_CART = "ADD_TO_CART";
+export const ADD_MULTIPLE_TO_CART = "ADD_MULTIPLE_TO_CART";
+export const REMOVE_FROM_CART = "REMOVE_FROM_CART";
+export const CLEAR_CART = "CLEAR_CART";
+export const UPDATE_CART_QUANTITY = "UPDATE_CART_QUANTITY";
+export const TOGGLE_CART = "TOGGLE_CART";
+
+export const UPDATE_CATEGORIES = "UPDATE_CATEGORIES";
+export const UPDATE_CURRENT_CATEGORY = "UPDATE_CURRENT_CATEGORY";

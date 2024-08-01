@@ -229,3 +229,16 @@ export const CREATE_AUCTION = gql`
     }
   }
 `;
+export const GOOGLE_SIGN_IN = gql`
+  mutation GoogleSignIn($input: GoogleSignInInput!) {
+    googleSignIn(input: $input) {
+      token
+      user {
+        id
+        username
+        email
+        photoUrl
+      }
+    }
+  }
+`;

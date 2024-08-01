@@ -11,6 +11,10 @@ export const GET_PRODUCTS = gql`
         id
         name
       }
+      seller {
+        id
+        username
+      }
       auction {
         id
         startTime
@@ -32,6 +36,10 @@ export const GET_PRODUCT_DETAILS = gql`
         id
         name
       }
+      seller {
+        id
+        username
+      }
       auction {
         id
         startTime
@@ -48,6 +56,7 @@ export const GET_USER_PROFILE = gql`
       id
       username
       email
+      photoUrl
       products {
         id
         name
@@ -103,10 +112,19 @@ export const GET_AUCTIONS = gql`
     auctions {
       id
       product {
+        id
         name
       }
       startTime
       endTime
+      startingPrice
+      bids {
+        amount
+        user {
+          id
+          username
+        }
+      }
       status
     }
   }
@@ -155,6 +173,28 @@ export const GET_PAYMENTS = gql`
       method
       status
       transactionId
+    }
+  }
+`;
+
+export const GOOGLE_SIGN_IN = gql`
+  mutation GoogleSignIn($input: GoogleSignInInput!) {
+    googleSignIn(input: $input) {
+      token
+      user {
+        id
+        username
+        email
+        photoUrl
+      }
+    }
+  }
+`;
+
+export const QUERY_CHECKOUT = gql`
+  query getCheckout($products: [ProductInput]) {
+    checkout(products: $products) {
+      session
     }
   }
 `;

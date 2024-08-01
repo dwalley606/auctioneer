@@ -17,32 +17,86 @@ const generateToken = (user) => {
   return jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 };
 
-const signup = async (firstName, lastName, email, password) => {
+const signup = async (username, email, password) => {
+  console.log("Signup called with:", { username, email, password });
+
+  if (!password) {
+    throw new Error("Password is required");
+  }
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    console.log("Email already in use");
+    throw new Error("Email already in use");
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
   const user = new User({
-    firstName,
-    lastName,
+    username,
     email,
     password: hashedPassword,
   });
   await user.save();
   const token = generateToken(user);
-
-  // Log the generated token to the console
-  console.log("Generated Token:", token);
-
+  console.log("User created:", user);
   return { token, user };
 };
 
 const login = async (email, password) => {
+  console.log("Login called with:", { email, password }); // Debugging line
+
   const user = await User.findOne({ email });
-  if (!user) throw new Error("Invalid credentials");
+  if (!user) {
+    console.error("User not found"); // Debugging line
+    throw new Error("Invalid credentials");
+  }
 
   const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) throw new Error("Invalid credentials");
+  if (!isMatch) {
+    console.error("Password does not match"); // Debugging line
+    throw new Error("Invalid credentials");
+  }
 
   const token = generateToken(user);
   return { token, user };
+};
+
+const googleSignIn = async (parent, { input }) => {
+  try {
+    console.log("Google sign-in attempt for email:", input.email);
+    let user = await User.findOne({ email: input.email });
+
+    if (!user) {
+      user = await User.create({
+        username: input.username,
+        email: input.email,
+        googleId: input.googleId,
+        photoUrl: input.photoUrl,
+      });
+      console.log("New user created:", user);
+    } else if (!user.googleId) {
+      user.googleId = input.googleId;
+      user.photoUrl = input.photoUrl;
+      await user.save();
+      console.log("User updated with Google ID:", user);
+    }
+
+    const token = generateToken(user);
+    return { token, user };
+  } catch (error) {
+    console.error("Google sign-in error:", error);
+    throw new Error("Unable to authenticate with Google");
+  }
+};
+
+const signout = async (req, res) => {
+  try {
+    res.status(200).json({ message: "Signout successful" });
+  } catch (error) {
+    if (!res.headersSent) {
+      res.status(500).json({ message: "Signout failed", error: error.message });
+    }
+  }
 };
 
 const getUsers = async () => {
@@ -209,6 +263,8 @@ const getNotifications = async () => {
 module.exports = {
   signup,
   login,
+  googleSignIn,
+  signout,
   getUsers,
   createProduct,
   getProducts,
