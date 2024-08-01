@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from "@apollo/client";
 
 export const LOGIN_USER = gql`
   mutation LoginUser($email: String!, $password: String!) {
@@ -71,3 +71,16 @@ export const CREATE_ORDER = gql`
   }
 `;
 
+export const GOOGLE_SIGN_IN = gql`
+  mutation GoogleSignIn($input: GoogleSignInInput!) {
+    googleSignIn(input: $input) {
+      token
+      user {
+        id
+        username
+        email
+        photoUrl
+      }
+    }
+  }
+`;
