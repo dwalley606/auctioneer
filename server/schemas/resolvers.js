@@ -1,6 +1,4 @@
 const { AuthenticationError } = require("apollo-server-express");
-const { User } = require("../models");
-const { signToken } = require("../utils/auth");
 const actions = require("./actions");
 
 const resolvers = {
@@ -45,38 +43,8 @@ const resolvers = {
       return await actions.login(email, password);
     },
     googleSignIn: async (parent, { input }) => {
-      try {
-        // Verify the Google ID token here (you should implement this)
-        // const decodedToken = await verifyGoogleIdToken(input.idToken);
-        // if (!decodedToken) {
-        //   throw new AuthenticationError('Invalid Google ID token');
-        // }
-
-        let user = await User.findOne({ email: input.email });
-
-        if (!user) {
-          // If the user doesn't exist, create a new one
-          user = await User.create({
-            username: input.username,
-            email: input.email,
-            googleId: input.googleId,
-            photoUrl: input.photoUrl,
-          });
-        } else if (!user.googleId) {
-          // If user exists but doesn't have a googleId, update it
-          user.googleId = input.googleId;
-          user.photoUrl = input.photoUrl;
-          await user.save();
-        }
-
-        const token = signToken(user);
-        return { token, user };
-      } catch (error) {
-        console.error("Google sign-in error:", error);
-        throw new AuthenticationError("Unable to authenticate with Google");
-      }
+      return await actions.googleSignIn(parent, { input });
     },
-
     createUser: async (_, { username, email, password }, context) => {
       if (!context.user) throw AuthenticationError;
       return await actions.createUser(username, email, password);

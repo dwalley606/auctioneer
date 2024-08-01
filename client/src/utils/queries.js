@@ -116,3 +116,12 @@ export const GOOGLE_SIGN_IN = gql`
     }
   }
 `;
+
+
+export const QUERY_CHECKOUT = gql`
+  query getCheckout($products: [ProductInput]) {
+    checkout(products: $products) {
+      session
+    }
+  }
+`;

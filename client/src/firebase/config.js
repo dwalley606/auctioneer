@@ -1,20 +1,22 @@
-// src/firebase/config.js
-
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getStorage } from "firebase/storage"; // Ensure this is imported
 
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyC8g-optTCtJlHVZkgNz71NA2ZD-V5F_9s",
-  authDomain: "auctioneer-10f39.firebaseapp.com",
-  projectId: "auctioneer-10f39",
-  storageBucket: "auctioneer-10f39.appspot.com",
-  messagingSenderId: "92992834492",
-  appId: "1:92992834492:web:03462841657e96cf1639b9",
-  measurementId: "G-7CEQP0EPV5",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
+const storage = getStorage(app); // Add storage initialization
 
-export { auth, googleProvider };
+export { app, auth, googleProvider, storage };

@@ -14,16 +14,9 @@ import Nav from "./components/Nav/index";
 const GRAPHQL_URI =
   import.meta.env.VITE_GRAPHQL_URI || "http://localhost:3001/graphql";
 
-// Debugging: Check if the environment variable is being read correctly
-console.log("Environment variables:", import.meta.env);
-console.log("GRAPHQL_URI:", GRAPHQL_URI);
-
 const httpLink = createHttpLink({
   uri: GRAPHQL_URI,
 });
-
-// Debugging: Check if the httpLink is being created correctly
-console.log("httpLink:", httpLink);
 
 // Function to get the token from localStorage
 const getToken = () => localStorage.getItem("id_token");
