@@ -1,0 +1,29 @@
+.ProductList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.ProductList-item {
+  width: 200px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.ProductList-item img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.ProductList-item .title {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.ProductList-item .price {
+  color: #888;
+  margin-top: 5px;
+}

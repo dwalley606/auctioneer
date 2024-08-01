@@ -4,10 +4,10 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { store, persistor } from "./redux/store";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home.jsx";
+import Login from "./pages/Login.jsx";
+import Signup from "./pages/Signup.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 import App from "./App.jsx";
 import { StoreProvider, initialState } from "./utils/GlobalState";
 

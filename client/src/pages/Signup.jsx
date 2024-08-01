@@ -12,6 +12,7 @@ import {
   signInSuccess,
   signInFailure,
 } from "../redux/user/userSlice";
+import './css/Signup.css'
 
 function Signup() {
   const [formState, setFormState] = useState({

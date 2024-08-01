@@ -1,0 +1,13 @@
+.dashboard-info {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.dashboard-info span {
+  font-weight: bold;
+}
+
+.dashboard-info p {
+  margin: 0;
+}
