@@ -12,14 +12,9 @@ function Nav() {
                         </Link>
                     </li>
                     <li className='mx-1'>
-                        <Link to='/currentBids'>
-                            Current Bids
-                        </Link>
-                    </li>
-                    <li className='mx-1'>
-                        <Link to='/auctions'>
-                            Auctions
-                        </Link>
+                    <Link to='/Profile'>
+                        Profile
+                    </Link>
                     </li>
                     <li className='mx-1'>
                         <a href='/' onClick={() => Auth.logout()}>
@@ -49,6 +44,7 @@ function Nav() {
         <header className='flex-row px-1'>
             <h1>
                 <Link to='/'>
+                    <span role='img' aria-label='auction hammer'>🔨</span>
                     Auctioneer
                 </Link>
             </h1>
