@@ -12,6 +12,7 @@ import CurrentBids from "./pages/currentBids.jsx";
 import Auctions from "./pages/auctions.jsx";
 import App from "./App.jsx";
 import { StoreProvider, initialState } from "./utils/GlobalState";
+import ProductItem from "./components/ProductItem/MockItem.jsx";
 
 const router = createBrowserRouter([
   {
@@ -35,13 +36,17 @@ const router = createBrowserRouter([
         element: <Dashboard />,
       },
       {
-        path: "currentBids",
-        element: <CurrentBids />,
+        path: "products/:id",
+        element: <ProductItem />,
       },
-      {
-        path: "auctions",
-        element: <Auctions />,
-      }
+      // {
+      //   path: "/orderHistory",
+      //   element: <OrderHistory />,
+      // },
+      // {
+      //   path: "/success",
+      //   element: <Success />,
+      // },
     ],
   },
 ]);
