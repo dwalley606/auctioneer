@@ -6,6 +6,8 @@ export const GET_PRODUCTS = gql`
       id
       name
       description
+      image
+      quantity
       price
       category {
         id
@@ -16,7 +18,7 @@ export const GET_PRODUCTS = gql`
         username
       }
       auction {
-id
+        id
         startTime
         endTime
         status
@@ -31,6 +33,8 @@ export const GET_PRODUCT_DETAILS = gql`
       id
       name
       description
+      image
+      quantity
       price
       category {
         id
@@ -41,7 +45,7 @@ export const GET_PRODUCT_DETAILS = gql`
         username
       }
       auction {
-id
+        id
         startTime
         endTime
         status
@@ -116,7 +120,6 @@ export const GOOGLE_SIGN_IN = gql`
     }
   }
 `;
-
 
 export const QUERY_CHECKOUT = gql`
   query getCheckout($products: [ProductInput]) {

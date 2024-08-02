@@ -25,8 +25,18 @@ export const SIGNUP_USER = gql`
 `;
 
 export const CREATE_PRODUCT = gql`
-  mutation CreateProduct($name: String!, $description: String!, $price: Float!, $categoryId: ID!) {
-    createProduct(name: $name, description: $description, price: $price, categoryId: $categoryId) {
+  mutation CreateProduct(
+    $name: String!
+    $description: String!
+    $price: Float!
+    $categoryId: ID!
+  ) {
+    createProduct(
+      name: $name
+      description: $description
+      price: $price
+      categoryId: $categoryId
+    ) {
       id
       name
       description
@@ -40,7 +50,7 @@ export const CREATE_PRODUCT = gql`
 `;
 
 export const PLACE_BID = gql`
-  mutation PlaceBid($productId: ID!, $amount: Float!) {
+  mutation placeBid($productId: ID!, $amount: Float!) {
     placeBid(productId: $productId, amount: $amount) {
       id
       user {
