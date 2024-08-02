@@ -278,12 +278,12 @@ const Nav = () => {
             </li>
             <li className="menu-category">
               <Link to="/currentBids" className="menu-title">
-                About
-              </Link>
+                Current Bids
+                </Link>
             </li>
             <li className="menu-category">
               <Link to="/auctions" className="menu-title">
-                Services
+                Auctions
               </Link>
             </li>
             <li className="menu-category">

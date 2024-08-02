@@ -8,6 +8,8 @@ import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import CurrentBids from "./pages/currentBids.jsx";
+import Auctions from "./pages/auctions.jsx";
 import App from "./App.jsx";
 import { StoreProvider, initialState } from "./utils/GlobalState";
 
@@ -32,18 +34,14 @@ const router = createBrowserRouter([
         path: "dashboard",
         element: <Dashboard />,
       },
-      // {
-      //   path: "/products/:id",
-      //   element: <Detail />,
-      // },
-      // {
-      //   path: "/orderHistory",
-      //   element: <OrderHistory />,
-      // },
-      // {
-      //   path: "/success",
-      //   element: <Success />,
-      // },
+      {
+        path: "currentBids",
+        element: <CurrentBids />,
+      },
+      {
+        path: "auctions",
+        element: <Auctions />,
+      }
     ],
   },
 ]);
