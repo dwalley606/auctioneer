@@ -56,24 +56,19 @@ const signup = async (username, email, password) => {
 // Login action
 const login = async (email, password) => {
   console.log("Login called with:", { email, password });
-
   const user = await User.findOne({ email });
   if (!user) {
     console.error("User not found");
     throw new Error("Invalid credentials");
   }
-
   console.log("User found:", user);
-
   try {
     const isMatch = await user.isCorrectPassword(password);
     console.log("Password match:", isMatch);
-
     if (!isMatch) {
       console.error("Password does not match");
       throw new Error("Invalid credentials");
     }
-
     const token = generateToken(user);
     return { token, user };
   } catch (error) {
