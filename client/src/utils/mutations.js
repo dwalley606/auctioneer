@@ -49,9 +49,9 @@ export const CREATE_PRODUCT = gql`
   }
 `;
 
-export const PLACE_BID = gql`
-  mutation placeBid($productId: ID!, $amount: Float!) {
-    placeBid(productId: $productId, amount: $amount) {
+export const CREATE_BID = gql`
+  mutation CreateBid($productId: ID!, $amount: Float!) {
+    createBid(productId: $productId, amount: $amount) {
       id
       user {
         id

@@ -6,7 +6,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
   useGetProductDetails,
-  usePlaceBid,
+  useCreateBid,
   useGetAuctions,
 } from "../../utils/actions";
 import "./MockItem.css"; // Create and import CSS for styling
@@ -26,7 +26,7 @@ export default function ProductDetail() {
     error: productError,
   } = useGetProductDetails(id);
   const { data: auctionsData, startPolling, stopPolling } = useGetAuctions();
-  const [placeBid] = usePlaceBid();
+  const [placeBid] = useCreateBid();
 
   useEffect(() => {
     async function fetchProduct() {
