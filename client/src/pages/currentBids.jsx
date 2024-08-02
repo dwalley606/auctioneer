@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from "react-router-dom"; 
+import { Link } from "react-router-dom";
 
 const CurrentBids = () => {
   const [bids, setBids] = useState([]);
@@ -36,6 +36,7 @@ const CurrentBids = () => {
           ))}
         </ul>
       )}
+      <Link to="/currentBids">Go to Current Bids</Link>
     </div>
   );
 };

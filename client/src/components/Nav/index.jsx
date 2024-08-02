@@ -277,9 +277,9 @@ const Nav = () => {
               </div>
             </li>
             <li className="menu-category">
-              <Link to="/currentBids" className="menu-title">
+            <Link to="/currentBids" className="menu-title">
                 Current Bids
-                </Link>
+            </Link>
             </li>
             <li className="menu-category">
               <Link to="/auctions" className="menu-title">
@@ -287,7 +287,7 @@ const Nav = () => {
               </Link>
             </li>
             <li className="menu-category">
-              <Link to="/contact" className="menu-title">
+              <Link to="/pages/contact" className="menu-title">
                 Contact
               </Link>
             </li>

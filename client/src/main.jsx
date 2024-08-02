@@ -39,14 +39,14 @@ const router = createBrowserRouter([
         path: "products/:id",
         element: <ProductItem />,
       },
-      // {
-      //   path: "/orderHistory",
-      //   element: <OrderHistory />,
-      // },
-      // {
-      //   path: "/success",
-      //   element: <Success />,
-      // },
+      {
+        path: "currentBids",
+        element: <CurrentBids />,
+      },
+      {
+        path: "auctions",
+        element: <Auctions />,
+      },
     ],
   },
 ]);
