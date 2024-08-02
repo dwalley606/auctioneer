@@ -52,8 +52,9 @@ const login = async (email, password) => {
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
+  console.log(password);
+  console.log(user.password);
   if (!isMatch) {
-    console.error("Password does not match"); // Debugging line
     throw new Error("Invalid credentials");
   }
 

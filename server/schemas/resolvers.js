@@ -36,8 +36,8 @@ const resolvers = {
     },
   },
   Mutation: {
-    signup: async (_, { firstName, lastName, email, password }) => {
-      return await actions.signup(firstName, lastName, email, password);
+    signup: async (_, { username, email, password }) => {
+      return await actions.signup(username, email, password);
     },
     login: async (_, { email, password }) => {
       return await actions.login(email, password);

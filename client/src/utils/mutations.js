@@ -13,58 +13,12 @@ export const LOGIN_USER = gql`
 `;
 
 export const SIGNUP_USER = gql`
-  mutation SignupUser(
-    $firstName: String!
-    $lastName: String!
-    $email: String!
-    $password: String!
-  ) {
-    signup(
-      firstName: $firstName
-      lastName: $lastName
-      email: $email
-      password: $password
-    ) {
+  mutation SignupUser($username: String!, $email: String!, $password: String!) {
+    signup(username: $username, email: $email, password: $password) {
       token
       user {
         id
         username
-      }
-    }
-  }
-`;
-
-export const CREATE_USER = gql`
-  mutation CreateUser($username: String!, $email: String!) {
-    createUser(username: $username, email: $email) {
-      id
-      username
-      email
-      products {
-        id
-        name
-      }
-      bids {
-        id
-        amount
-      }
-      orders {
-        id
-        amount
-      }
-      feedbacks {
-        id
-        rating
-      }
-      wishlist {
-        id
-        name
-      }
-      notifications {
-        id
-        message
-        read
-        timestamp
       }
     }
   }

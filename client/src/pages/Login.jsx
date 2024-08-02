@@ -39,11 +39,12 @@ function Login() {
       });
 
       if (mutationResponse.errors) {
-        throw new Error(mutationResponse.errors[0].message);
+        throw new Error("Here's an error:", mutationResponse.errors[0].message);
       }
 
       console.log("Login response data:", mutationResponse.data);
       const token = mutationResponse.data.login.token;
+      console.log("token is:" + token);
       Auth.login(token);
       dispatch(signInSuccess(mutationResponse.data.login.user));
     } catch (e) {
