@@ -287,7 +287,7 @@ const Nav = () => {
               </Link>
             </li>
             <li className="menu-category">
-              <Link to="/pages/contact" className="menu-title">
+              <Link to="/contact" className="menu-title">
                 Contact
               </Link>
             </li>

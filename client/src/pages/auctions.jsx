@@ -4,6 +4,16 @@ import { Link } from 'react-router-dom';
 const Auctions = () => {
     const [userAuctions, setUserAuctions] = useState([]);
     const [startedAuctions, setStartedAuctions] = useState([]);
+    const [itemName, setItemName] = useState('');
+    const [itemDescription, setItemDescription] = useState('');
+    const [startingBid, setStartingBid] = useState(0);
+    const [auctionTimeSlot, setAuctionTimeSlot] = useState('');
+    const [showCreateForm, setShowCreateForm] = useState(false); // Add state variable for form visibility
+
+    const handleFormSubmit = (event) => {
+        event.preventDefault();
+        // Handle form submission logic here
+    };
 
     useEffect(() => {
         // Fetch user auctions
@@ -37,18 +47,42 @@ const Auctions = () => {
         <div>
             <h1>User Auctions</h1>
             <ul>
-                {userAuctions.map((auction) => (
+                {Array.isArray(userAuctions) && userAuctions.map((auction) => (
                     <li key={auction.id}>{auction.name}</li>
                 ))}
             </ul>
 
             <h1>Started Auctions</h1>
             <ul>
-                {startedAuctions.map((auction) => (
+                {Array.isArray(startedAuctions) && startedAuctions.map((auction) => (
                     <li key={auction.id}>{auction.name}</li>
                 ))}
             </ul>
-            <Link to="/auctions">Go to Auctions</Link>
+
+            {!showCreateForm && ( // Add condition to show/hide form
+                <button onClick={() => setShowCreateForm(true)}>Create Auction</button>
+            )}
+
+            {showCreateForm && ( // Add condition to show/hide form
+                <div>
+                    <h1>Create Auction</h1>
+                    <form onSubmit={handleFormSubmit}>
+                        <label htmlFor="itemName">Item Name:</label>
+                        <input type="text" id="itemName" value={itemName} onChange={(e) => setItemName(e.target.value)} />
+
+                        <label htmlFor="itemDescription">Item Description:</label>
+                        <textarea id="itemDescription" value={itemDescription} onChange={(e) => setItemDescription(e.target.value)} />
+
+                        <label htmlFor="startingBid">Starting Bid Amount:</label>
+                        <input type="number" id="startingBid" value={startingBid} onChange={(e) => setStartingBid(e.target.value)} />
+
+                        <label htmlFor="auctionTimeSlot">Auction Time Slot:</label>
+                        <input type="text" id="auctionTimeSlot" value={auctionTimeSlot} onChange={(e) => setAuctionTimeSlot(e.target.value)} />
+
+                        <button type="submit">Create Auction</button>
+                    </form>
+                </div>
+            )}
         </div>
     );
 };

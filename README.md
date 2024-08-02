@@ -34,9 +34,13 @@
 
 * It is done when the user clicks the create Auction button and are presented with a form with multiple inputs, including a file selecter (allowing photos of the item to be uploaded), Item title, Starting Bid price, Item description, and time that the item is up for auction, and they click the create auction and a new auction room is created.
 
-* It is done when the user clics the contact nav tab and are taken to the contact page for Auctioneer, the user is presented with the corporation location and email, Company creator name and General Information contact if any issues are happened upon. 
+* It is done when the user clics the Contact nav tab and are taken to the contact page for Auctioneer, the user is presented with the corporation location and email, Company creator name and General Information contact if any issues are happened upon. 
 
-* It is done when the user clicks on the search bar and is able to look for an item through description or name,and they are presented with items that fit to their search
+* It is done when the user clicks on the search bar and is able to look for an item through description or name,and they are presented with items that fit to their search.
+
+* It is done when the user clicks on one of the presented items and is able to make a bid on the item or put it in the cart, and the item is them able to be purchased once the Shopping bag Icon is clicked.
+
+* It is done when the use clicks the shopping bag and are presented with the items they have place into their cart as well as a checkout button which leads them to the stripe payment screen and the user is able to enter their information and purchase the item.
 
 ## Description
 
