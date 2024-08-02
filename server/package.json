@@ -20,7 +20,6 @@
   "license": "ISC",
   "dependencies": {
     "@apollo/server": "^4.10.5",
-    "apollo-server-express": "^3.13.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
@@ -29,6 +28,7 @@
     "google-auth-library": "^9.12.0",
     "graphql": "^16.9.0",
     "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.5.0",
     "mongoose": "^8.5.1",
     "server": "file:",
     "stripe": "^16.5.0"

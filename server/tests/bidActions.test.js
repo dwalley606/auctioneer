@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 const Bid = require("../models/Bid");
-const { createBid, getBids } = require("../schemas/actions");
+const { placeBid, getBids } = require("../schemas/actions");
 
 let mongoServer;
 
@@ -31,7 +31,7 @@ describe("Bid Actions", () => {
       timestamp: new Date(),
     };
 
-    const createdBid = await createBid(
+    const createdBid = await placeBid(
       newBid.auction,
       newBid.user,
       newBid.amount,

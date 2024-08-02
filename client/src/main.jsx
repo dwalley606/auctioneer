@@ -10,6 +10,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import App from "./App.jsx";
 import { StoreProvider, initialState } from "./utils/GlobalState";
+import ProductItem from "./components/ProductItem/MockItem.jsx";
 
 const router = createBrowserRouter([
   {
@@ -32,10 +33,10 @@ const router = createBrowserRouter([
         path: "dashboard",
         element: <Dashboard />,
       },
-      // {
-      //   path: "/products/:id",
-      //   element: <Detail />,
-      // },
+      {
+        path: "products/:id",
+        element: <ProductItem />,
+      },
       // {
       //   path: "/orderHistory",
       //   element: <OrderHistory />,

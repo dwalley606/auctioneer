@@ -23,6 +23,12 @@ const feedbackSchema = new Schema({
     ref: "User",
     required: true,
   },
+  product: {
+    // Ensure that the product reference is included if needed
+    type: Schema.Types.ObjectId,
+    ref: "Product",
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

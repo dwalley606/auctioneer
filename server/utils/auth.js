@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const { AuthenticationError } = require("apollo-server-express");
 const admin = require("../firebase");
 
-const secret = "your_secret_key";
+const secret = process.env.JWT_SECRET || "your_secret_key";
 const expiration = "2h";
 
 module.exports = {
@@ -25,9 +25,8 @@ module.exports = {
     try {
       const { data } = jwt.verify(token, secret, { maxAge: expiration });
       req.user = data;
-    } catch (error) {
-      console.log("Error verifying token:", error); // Log the specific error for debugging
-      console.log("Invalid token:", token); // Log the token for reference
+    } catch {
+      console.log("Invalid token");
     }
 
     return req;

@@ -1,20 +1,41 @@
+const { User, Product, Category, Order } = require("../models");
 const { AuthenticationError } = require("apollo-server-express");
 const actions = require("./actions");
 
 const resolvers = {
   Query: {
     users: async (_, __, context) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.getUsers();
     },
     products: async () => {
-      return await actions.getProducts();
+      try {
+        const products = await actions.getProducts();
+        console.log("GraphQL Resolver - Products fetched: ", products);
+        return products;
+      } catch (error) {
+        console.error("GraphQL Resolver - Error fetching products: ", error);
+        throw new Error("Error fetching products");
+      }
     },
     categories: async () => {
-      return await actions.getCategories();
+      try {
+        const categories = await actions.getCategories();
+        console.log("GraphQL Resolver - Categories fetched: ", categories);
+        return categories;
+      } catch (error) {
+        console.error("GraphQL Resolver - Error fetching categories: ", error);
+        throw new Error("Error fetching categories");
+      }
     },
     orders: async (_, __, context) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.getOrders();
     },
     feedbacks: async () => {
@@ -27,11 +48,17 @@ const resolvers = {
       return await actions.getBids();
     },
     payments: async (_, __, context) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.getPayments();
     },
     notifications: async (_, __, context) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.getNotifications();
     },
   },
@@ -40,39 +67,60 @@ const resolvers = {
       return await actions.signup(username, email, password);
     },
     login: async (_, { email, password }) => {
-      return await actions.login(email, password);
+      try {
+        return await actions.login(email, password);
+      } catch (error) {
+        console.error("GraphQL Login Error:", error);
+        throw new AuthenticationError("Invalid credentials");
+      }
     },
     googleSignIn: async (parent, { input }) => {
       return await actions.googleSignIn(parent, { input });
     },
     createUser: async (_, { username, email, password }, context) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.createUser(username, email, password);
     },
     createProduct: async (
       _,
-      { name, description, startingPrice, categoryId },
+      { name, description, quantity, price, categoryId },
       context
     ) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.createProduct(
         name,
         description,
-        startingPrice,
+        quantity,
+        price,
         categoryId,
         context.user.id
       );
     },
     createCategory: async (_, { name }, context) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.createCategory(name);
     },
     createOrder: async (_, { productId, amount }, context) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.createOrder(context.user.id, productId, amount);
     },
     createFeedback: async (_, { productId, rating, comment }, context) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.createFeedback(
         context.user.id,
         productId,
@@ -85,7 +133,10 @@ const resolvers = {
       { productId, startTime, endTime, startingPrice, status },
       context
     ) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.createAuction(
         productId,
         startTime,
@@ -94,16 +145,22 @@ const resolvers = {
         status
       );
     },
-    createBid: async (_, { productId, amount }, context) => {
-      if (!context.user) throw AuthenticationError;
-      return await actions.createBid(context.user.id, productId, amount);
+    placeBid: async (_, { productId, amount }, context) => {
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
+      return await actions.placeBid(context.user.id, productId, amount);
     },
     createPayment: async (
       _,
       { orderId, method, status, transactionId },
       context
     ) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.createPayment(
         orderId,
         method,
@@ -112,7 +169,10 @@ const resolvers = {
       );
     },
     createNotification: async (_, { userId, message }, context) => {
-      if (!context.user) throw AuthenticationError;
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
       return await actions.createNotification(userId, message);
     },
   },
