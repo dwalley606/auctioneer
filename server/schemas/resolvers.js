@@ -1,3 +1,4 @@
+const { User, Product, Category, Order } = require("../models");
 const { AuthenticationError } = require("apollo-server-express");
 const actions = require("./actions");
 
@@ -11,10 +12,24 @@ const resolvers = {
       return await actions.getUsers();
     },
     products: async () => {
-      return await actions.getProducts();
+      try {
+        const products = await actions.getProducts();
+        console.log("GraphQL Resolver - Products fetched: ", products);
+        return products;
+      } catch (error) {
+        console.error("GraphQL Resolver - Error fetching products: ", error);
+        throw new Error("Error fetching products");
+      }
     },
     categories: async () => {
-      return await actions.getCategories();
+      try {
+        const categories = await actions.getCategories();
+        console.log("GraphQL Resolver - Categories fetched: ", categories);
+        return categories;
+      } catch (error) {
+        console.error("GraphQL Resolver - Error fetching categories: ", error);
+        throw new Error("Error fetching categories");
+      }
     },
     orders: async (_, __, context) => {
       if (!context.user)
@@ -71,7 +86,7 @@ const resolvers = {
     },
     createProduct: async (
       _,
-      { name, description, startingPrice, categoryId },
+      { name, description, quantity, price, categoryId },
       context
     ) => {
       if (!context.user)
@@ -81,7 +96,8 @@ const resolvers = {
       return await actions.createProduct(
         name,
         description,
-        startingPrice,
+        quantity,
+        price,
         categoryId,
         context.user.id
       );
@@ -129,12 +145,12 @@ const resolvers = {
         status
       );
     },
-    createBid: async (_, { productId, amount }, context) => {
+    placeBid: async (_, { productId, amount }, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.createBid(context.user.id, productId, amount);
+      return await actions.placeBid(context.user.id, productId, amount);
     },
     createPayment: async (
       _,

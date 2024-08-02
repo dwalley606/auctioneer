@@ -42,6 +42,13 @@ const userSchema = new Schema({
       ref: "Feedback",
     },
   ],
+  notifications: [
+    // Add this line to include notifications
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Notification",
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

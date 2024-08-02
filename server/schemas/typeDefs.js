@@ -20,19 +20,20 @@ const typeDefs = gql`
   }
 
   input GoogleSignInInput {
-  idToken: String!
-  email: String!
-  username: String!
-  photoUrl: String
-  googleId: String!
-}
-
+    idToken: String!
+    email: String!
+    username: String!
+    photoUrl: String
+    googleId: String!
+  }
 
   type Product {
     id: ID!
     name: String!
     description: String!
-    startingPrice: Float!
+    image: String
+    quantity: Int!
+    price: Float!
     category: Category!
     seller: User!
     bids: [Bid]
@@ -118,11 +119,12 @@ const typeDefs = gql`
     createProduct(
       name: String!
       description: String!
-      startingPrice: Float!
+      quantity: Int!
+      price: Float!
       categoryId: ID!
     ): Product
     createCategory(name: String!): Category
-    createBid(productId: ID!, amount: Float!): Bid
+    placeBid(productId: ID!, amount: Float!): Bid
     createOrder(productId: ID!, amount: Float!): Order
     createFeedback(productId: ID!, rating: Int!, comment: String!): Feedback
     createPayment(
