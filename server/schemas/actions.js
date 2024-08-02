@@ -17,6 +17,7 @@ const generateToken = (user) => {
   return jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 };
 
+// Signup action
 const signup = async (username, email, password) => {
   console.log("Signup called with:", { username, email, password });
 
@@ -24,57 +25,84 @@ const signup = async (username, email, password) => {
     throw new Error("Password is required");
   }
 
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
+  const existingUserByEmail = await User.findOne({ email });
+  if (existingUserByEmail) {
     console.log("Email already in use");
     throw new Error("Email already in use");
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const existingUserByUsername = await User.findOne({ username });
+  if (existingUserByUsername) {
+    console.log("Username already in use");
+    throw new Error("Username already in use");
+  }
+
   const user = new User({
     username,
     email,
-    password: hashedPassword,
+    password,
   });
-  await user.save();
+
+  try {
+    await user.save();
+    console.log("User created:", user);
+  } catch (error) {
+    console.error("Error saving user:", error);
+    throw error;
+  }
+
   const token = generateToken(user);
-  console.log("User created:", user);
   return { token, user };
 };
 
+// Login action
 const login = async (email, password) => {
-  console.log("Login called with:", { email, password }); // Debugging line
+  console.log("Login called with:", { email, password });
 
   const user = await User.findOne({ email });
   if (!user) {
-    console.error("User not found"); // Debugging line
+    console.error("User not found");
     throw new Error("Invalid credentials");
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    console.error("Password does not match"); // Debugging line
-    throw new Error("Invalid credentials");
-  }
+  console.log("User found:", user);
 
-  const token = generateToken(user);
-  return { token, user };
+  try {   
+    const isMatch = await user.isCorrectPassword(password);
+    console.log("Password match:", isMatch);
+
+    if (!isMatch) {
+      console.error("Password does not match");
+      throw new Error("Invalid credentials");
+    }
+
+    const token = generateToken(user);
+    return { token, user };
+  } catch (error) {
+    console.error("Error during password comparison:", error);
+    throw new Error("Error during password comparison");
+  }
 };
 
+
+// Google Sign-In action
 const googleSignIn = async (parent, { input }) => {
   try {
     console.log("Google sign-in attempt for email:", input.email);
     let user = await User.findOne({ email: input.email });
 
     if (!user) {
-      user = await User.create({
+      // Create new user without a password
+      user = new User({
         username: input.username,
         email: input.email,
         googleId: input.googleId,
         photoUrl: input.photoUrl,
       });
+      await user.save();
       console.log("New user created:", user);
     } else if (!user.googleId) {
+      // Update existing user with Google ID and photo URL if not already set
       user.googleId = input.googleId;
       user.photoUrl = input.photoUrl;
       await user.save();
@@ -89,6 +117,8 @@ const googleSignIn = async (parent, { input }) => {
   }
 };
 
+
+// Signout action
 const signout = async (req, res) => {
   try {
     res.status(200).json({ message: "Signout successful" });
@@ -99,6 +129,7 @@ const signout = async (req, res) => {
   }
 };
 
+// Get users
 const getUsers = async () => {
   return await User.find();
 };

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const { Schema } = mongoose;
 
@@ -52,14 +52,16 @@ userSchema.pre("save", async function (next) {
   if (this.isNew || this.isModified("password")) {
     if (this.password) {
       const saltRounds = 10;
-      this.password = await bcrypt.hash(this.password, saltRounds);
+      const hashedPassword = await bcrypt.hash(this.password, saltRounds);
+      console.log("Pre-save hook - Hashed Password:", hashedPassword); // Debug Line
+      this.password = hashedPassword;
     }
   }
-
   next();
 });
 
 userSchema.methods.isCorrectPassword = async function (password) {
+  console.log("Comparing password:", password, "with hashed:", this.password); // Debug Line
   return this.password ? await bcrypt.compare(password, this.password) : false;
 };
 
