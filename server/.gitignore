@@ -1,1 +1,6 @@
 package-lock.json
+
+# dotenv environment variable files
+.env
+
+server/config/serviceAccountKey.json

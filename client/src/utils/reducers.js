@@ -1,131 +1,84 @@
 import {
-  useGetProducts,
-  useGetProductDetails,
-  useGetUserProfile,
-  useGetAuctions,
-  useGetCategories,
-  useLoginUser,
-  useSignupUser,
-  useCreateProduct,
-  useCreateOrder,
-  useUpdateCategory,
+  UPDATE_PRODUCTS,
+  ADD_TO_CART,
+  ADD_MULTIPLE_TO_CART,
+  REMOVE_FROM_CART,
+  UPDATE_CART_QUANTITY,
+  CLEAR_CART,
+  TOGGLE_CART,
+  UPDATE_CATEGORIES,
+  UPDATE_CURRENT_CATEGORY,
 } from "./actions";
 
 export const reducer = (state, action) => {
   switch (action.type) {
-    case "GET_PRODUCTS":
+    case UPDATE_PRODUCTS:
       return {
         ...state,
-        products: useGetProducts(),
+        products: [...action.products],
       };
 
-    case "GET_PRODUCT_DETAILS":
+    case ADD_TO_CART:
       return {
         ...state,
-        productDetails: useGetProductDetails(action.id),
+        cartOpen: true,
+        cart: [...state.cart, action.product],
       };
 
-    case "GET_USER_PROFILE":
+    case ADD_MULTIPLE_TO_CART:
       return {
         ...state,
-        userProfile: useGetUserProfile(),
+        cart: [...state.cart, ...action.products],
       };
 
-    case "GET_USERS":
+    case UPDATE_CART_QUANTITY:
       return {
         ...state,
-        users: useGetUsers(),
+        cartOpen: true,
+        cart: state.cart.map((product) => {
+          if (action._id === product._id) {
+            product.purchaseQuantity = action.purchaseQuantity;
+          }
+          return product;
+        }),
       };
 
-    case "GET_ORDERS":
+    case REMOVE_FROM_CART:
+      let newState = state.cart.filter((product) => {
+        return product._id !== action._id;
+      });
+
       return {
         ...state,
-        orders: useGetOrders(),
+        cartOpen: newState.length > 0,
+        cart: newState,
       };
 
-    case "GET_PAYMENTS":
+    case CLEAR_CART:
       return {
         ...state,
-        payments: useGetPayments(),
+        cartOpen: false,
+        cart: [],
       };
 
-    case "GET_AUCTIONS":
+    case TOGGLE_CART:
       return {
         ...state,
-        auctions: useGetAuctions(),
+        cartOpen: !state.cartOpen,
       };
 
-    case "GET_CATEGORIES":
+    case UPDATE_CATEGORIES:
       return {
         ...state,
-        categories: useGetCategories(),
+        categories: [...action.categories],
       };
 
-    case "LOGIN_USER":
+    case UPDATE_CURRENT_CATEGORY:
       return {
         ...state,
-        user: useLoginUser(),
+        currentCategory: action.currentCategory,
       };
 
-    case "SIGNUP_USER":
-      return {
-        ...state,
-        newUser: useSignupUser(),
-      };
-
-    case "CREATE_PRODUCT":
-      return {
-        ...state,
-        newProduct: useCreateProduct(),
-      };
-
-    case "CREATE_BID":
-      return {
-        ...state,
-        bidResult: useCreateBid(),
-      };
-
-    case "CREATE_ORDER":
-      return {
-        ...state,
-        orderResult: useCreateOrder(),
-      };
-
-    case "CREATE_CATEGORY":
-      return {
-        ...state,
-        categoryResult: useCreateCategory(),
-      };
-
-    case "UPDATE_CATEGORY":
-      return {
-        ...state,
-        categoryUpdateResult: useUpdateCategory(),
-      };
-
-    case "CREATE_FEEDBACK":
-      return {
-        ...state,
-        feedbackResult: useCreateFeedback(),
-      };
-
-    case "CREATE_PAYMENT":
-      return {
-        ...state,
-        paymentResult: useCreatePayment(),
-      };
-
-    case "CREATE_NOTIFICATION":
-      return {
-        ...state,
-        notificationResult: useCreateNotification(),
-      };
-
-    case "CREATE_AUCTION":
-      return {
-        ...state,
-        auctionResult: useCreateAuction(),
-      };
     default:
       return state;
   }

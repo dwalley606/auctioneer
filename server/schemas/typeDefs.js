@@ -11,6 +11,7 @@ const typeDefs = gql`
     feedbacks: [Feedback]
     wishlist: [Product]
     notifications: [Notification]
+    photoUrl: String
   }
 
   type AuthPayload {
@@ -18,11 +19,21 @@ const typeDefs = gql`
     user: User!
   }
 
+  input GoogleSignInInput {
+    idToken: String!
+    email: String!
+    username: String!
+    photoUrl: String
+    googleId: String!
+  }
+
   type Product {
     id: ID!
     name: String!
     description: String!
-    startingPrice: Float!
+    image: String
+    quantity: Int!
+    price: Float!
     category: Category!
     seller: User!
     bids: [Bid]
@@ -89,6 +100,7 @@ const typeDefs = gql`
   type Query {
     users: [User]
     products: [Product]
+    product(id: ID!): Product
     categories: [Category]
     orders: [Order]
     feedbacks: [Feedback]
@@ -96,29 +108,38 @@ const typeDefs = gql`
     bids: [Bid]
     payments: [Payment]
     notifications: [Notification]
+    userProfile: User
   }
 
   type Mutation {
     signup(username: String!, email: String!, password: String!): AuthPayload
     login(email: String!, password: String!): AuthPayload
-    createUser(username: String!, email: String!): User
+    googleSignIn(input: GoogleSignInInput!): AuthPayload
+    createUser(username: String!, email: String!, password: String!): User
     createProduct(
       name: String!
       description: String!
-      startingPrice: Float!
+      quantity: Int!
+      price: Float!
       categoryId: ID!
     ): Product
     createCategory(name: String!): Category
-    createBid(productId: ID!, amount: Float!): Bid
-    createOrder(productId: ID!): Order
+    placeBid(productId: ID!, amount: Float!): Bid
+    createOrder(productId: ID!, amount: Float!): Order
     createFeedback(productId: ID!, rating: Int!, comment: String!): Feedback
-    createPayment(orderId: ID!, method: String!): Payment
+    createPayment(
+      orderId: ID!
+      method: String!
+      status: String!
+      transactionId: String!
+    ): Payment
     createNotification(userId: ID!, message: String!): Notification
     createAuction(
       productId: ID!
       startTime: String!
       endTime: String!
       startingPrice: Float!
+      status: String!
     ): Auction
   }
 `;

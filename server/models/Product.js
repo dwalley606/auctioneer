@@ -1,3 +1,4 @@
+// server/models/Product.js
 const mongoose = require("mongoose");
 
 const { Schema } = mongoose;
@@ -30,6 +31,15 @@ const productSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Category",
     required: true,
+  },
+  seller: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  auction: {
+    type: Schema.Types.ObjectId,
+    ref: "Auction",
   },
 });
 

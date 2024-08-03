@@ -1,18 +1,14 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
-  firstName: {
+  username: {
     type: String,
     required: true,
     trim: true,
-  },
-  lastName: {
-    type: String,
-    required: true,
-    trim: true,
+    unique: true,
   },
   email: {
     type: String,
@@ -21,8 +17,18 @@ const userSchema = new Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: function () {
+      return !this.googleId;
+    },
     minlength: 5,
+  },
+  photoUrl: {
+    type: String,
+  },
+  googleId: {
+    type: String,
+    sparse: true,
+    unique: true,
   },
   orders: [
     {
@@ -36,21 +42,34 @@ const userSchema = new Schema({
       ref: "Feedback",
     },
   ],
+  notifications: [
+    // Add this line to include notifications
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Notification",
+    },
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-// set up pre-save middleware to create password
 userSchema.pre("save", async function (next) {
   if (this.isNew || this.isModified("password")) {
-    const saltRounds = 10;
-    this.password = await bcrypt.hash(this.password, saltRounds);
+    if (this.password) {
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(this.password, saltRounds);
+      console.log("Pre-save hook - Hashed Password:", hashedPassword); // Debug Line
+      this.password = hashedPassword;
+    }
   }
-
   next();
 });
 
-// compare the incoming password with the hashed password
 userSchema.methods.isCorrectPassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
+  console.log("Comparing password:", password, "with hashed:", this.password); // Debug Line
+  return this.password ? await bcrypt.compare(password, this.password) : false;
 };
 
 const User = mongoose.model("User", userSchema);

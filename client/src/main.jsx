@@ -1,15 +1,16 @@
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-
+import { store, persistor } from "./redux/store";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
 import Home from "./pages/Home";
-// import Detail from "./pages/Detail";
-// import NoMatch from "./pages/NoMatch";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-// import Success from "./pages/Success";
-// import OrderHistory from "./pages/OrderHistory";
+import Dashboard from "./pages/Dashboard";
 import App from "./App.jsx";
+import { StoreProvider, initialState } from "./utils/GlobalState";
+import ProductItem from "./components/ProductItem/MockItem.jsx";
 
 const router = createBrowserRouter([
   {
@@ -21,17 +22,21 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "/login",
+        path: "login",
         element: <Login />,
       },
       {
-        path: "/signup",
+        path: "signup",
         element: <Signup />,
       },
-      // {
-      //   path: "/products/:id",
-      //   element: <Detail />,
-      // },
+      {
+        path: "dashboard",
+        element: <Dashboard />,
+      },
+      {
+        path: "products/:id",
+        element: <ProductItem />,
+      },
       // {
       //   path: "/orderHistory",
       //   element: <OrderHistory />,
@@ -45,5 +50,11 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <RouterProvider router={router} />
+  <StoreProvider initialState={initialState}>
+    <PersistGate persistor={persistor}>
+      <Provider store={store}>
+        <RouterProvider router={router} />
+      </Provider>
+    </PersistGate>
+  </StoreProvider>
 );
