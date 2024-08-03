@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router-dom"; 
 import { useMutation } from "@apollo/client";
 import { useSelector, useDispatch } from "react-redux";
 
@@ -12,6 +12,7 @@ import {
   signInSuccess,
   signInFailure,
 } from "../redux/user/userSlice";
+import './css/Signup.css'
 
 function Signup() {
   const [formState, setFormState] = useState({

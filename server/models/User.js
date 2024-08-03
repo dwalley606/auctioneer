@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-
 const { Schema } = mongoose;
-
 const userSchema = new Schema({
   username: {
     type: String,
@@ -43,7 +41,6 @@ const userSchema = new Schema({
     },
   ],
   notifications: [
-    // Add this line to include notifications
     {
       type: Schema.Types.ObjectId,
       ref: "Notification",
@@ -54,7 +51,6 @@ const userSchema = new Schema({
     default: Date.now,
   },
 });
-
 userSchema.pre("save", async function (next) {
   if (this.isNew || this.isModified("password")) {
     if (this.password) {
@@ -66,12 +62,16 @@ userSchema.pre("save", async function (next) {
   }
   next();
 });
-
 userSchema.methods.isCorrectPassword = async function (password) {
   console.log("Comparing password:", password, "with hashed:", this.password); // Debug Line
-  return this.password ? await bcrypt.compare(password, this.password) : false;
+  try {
+    const match = await bcrypt.compare(password, this.password);
+    console.log("Password comparison result:", match);
+    return match;
+  } catch (error) {
+    console.error("Error during bcrypt.compare:", error);
+    throw error;
+  }
 };
-
 const User = mongoose.model("User", userSchema);
-
 module.exports = User;
