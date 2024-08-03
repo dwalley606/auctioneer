@@ -1,70 +1,151 @@
-import { useEffect } from "react";
-import ProductItem from "../ProductItem";
-import { useStoreContext } from "../../utils/GlobalState";
-import { UPDATE_PRODUCTS } from "../../utils/actions";
-import { useQuery } from "@apollo/client";
-import { QUERY_PRODUCTS } from "../../utils/queries";
-import { idbPromise } from "../../utils/helpers";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { ToastContainer, toast } from "react-toastify";
 import spinner from "../../assets/spinner.gif";
+import "react-toastify/dist/ReactToastify.css";
+import { fetchProducts } from "../../redux/products/productsSlice";
+import {
+  addToCart,
+  removeFromCart,
+  selectCartItems,
+} from "../../redux/cart/cartSlice";
+import "./ProductList.css";
 
-function ProductList() {
-  const [state, dispatch] = useStoreContext();
-
-  const { currentCategory } = state;
-
-  const { loading, data } = useQuery(QUERY_PRODUCTS);
+const ProductList = () => {
+  const dispatch = useDispatch();
+  const {
+    items: products,
+    loading,
+    error,
+  } = useSelector((state) => state.products);
+  const { currentCategory } = useSelector((state) => state.categories);
+  const cartItems = useSelector(selectCartItems);
 
   useEffect(() => {
-    if (data) {
-      dispatch({
-        type: UPDATE_PRODUCTS,
-        products: data.products,
-      });
-      data.products.forEach((product) => {
-        idbPromise("products", "put", product);
-      });
-    } else if (!loading) {
-      idbPromise("products", "get").then((products) => {
-        dispatch({
-          type: UPDATE_PRODUCTS,
-          products: products,
-        });
-      });
-    }
-  }, [data, loading, dispatch]);
+    console.log("Fetching products...");
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
-  function filterProducts() {
+  const filterProducts = () => {
     if (!currentCategory) {
-      return state.products;
+      return products;
     }
-
-    return state.products.filter(
-      (product) => product.category._id === currentCategory
+    return products.filter(
+      (product) => product.category.name === currentCategory
     );
-  }
+  };
+
+  const notifyAddedToCart = (item) => {
+    toast.success(`${item.name} added to cart!`, {
+      position: "top-center",
+      autoClose: 2000,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      theme: "colored",
+      style: {
+        backgroundColor: "#fff",
+        color: "#000",
+      },
+    });
+  };
+
+  const handleAddToCart = (product) => {
+    console.log(`Adding product ${product.name} to cart.`);
+    dispatch(addToCart(product));
+    notifyAddedToCart(product);
+  };
+
+  const handleRemoveFromCart = (product) => {
+    console.log(`Removing product ${product.name} from cart.`);
+    dispatch(removeFromCart(product));
+  };
+
+  const handleImageError = (event) => {
+    console.log("Image not available, setting placeholder.");
+    event.target.src =
+      "https://via.placeholder.com/200x300.png?text=Image+Not+Available";
+  };
 
   return (
-    <div className="my-2">
+    <div className="products-container">
+      <ToastContainer />
       <h2>Our Products:</h2>
-      {state.products.length ? (
-        <div className="flex-row">
-          {filterProducts().map((product) => (
-            <ProductItem
-              key={product._id}
-              _id={product._id}
-              image={product.image}
-              name={product.name}
-              price={product.price}
-              quantity={product.quantity}
-            />
-          ))}
-        </div>
+      {error && <p>Error: {error}</p>}
+      {loading ? (
+        <img src={spinner} alt="loading" />
       ) : (
-        <h3>You haven't added any products yet!</h3>
+        <>
+          {products && products.length ? (
+            <div className="products-grid">
+              {filterProducts().map((product) => (
+                <div key={product.id} className="product-card">
+                  <a href={`/products/${product.id}`}>
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="product-image"
+                      onError={handleImageError}
+                    />
+                  </a>
+                  <div className="product-info">
+                    <h1 className="product-title">{product.name}</h1>
+                    <p className="product-description">
+                      {product.description.slice(0, 40)}...
+                    </p>
+                    <p className="product-price">${product.price}</p>
+                  </div>
+                  <div className="product-actions">
+                    {!cartItems.find((item) => item.id === product.id) ? (
+                      <button
+                        className="product-button"
+                        onClick={() => handleAddToCart(product)}
+                      >
+                        Add to cart
+                      </button>
+                    ) : (
+                      <div className="product-quantity">
+                        <button
+                          className="product-button"
+                          onClick={() => handleAddToCart(product)}
+                        >
+                          +
+                        </button>
+                        <p className="product-quantity-text">
+                          {
+                            cartItems.find((item) => item.id === product.id)
+                              .quantity
+                          }
+                        </p>
+                        <button
+                          className="product-button"
+                          onClick={() => {
+                            const cartItem = cartItems.find(
+                              (item) => item.id === product.id
+                            );
+                            if (cartItem.quantity === 1) {
+                              handleRemoveFromCart(product);
+                            } else {
+                              dispatch(removeFromCart(product));
+                            }
+                          }}
+                        >
+                          -
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <h3>No products available.</h3>
+          )}
+        </>
       )}
-      {loading ? <img src={spinner} alt="loading" /> : null}
     </div>
   );
-}
+};
 
 export default ProductList;

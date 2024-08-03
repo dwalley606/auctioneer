@@ -103,19 +103,9 @@ export const GET_CATEGORIES = gql`
     categories {
       id
       name
-    }
-  }
-`;
-
-export const GOOGLE_SIGN_IN = gql`
-  mutation GoogleSignIn($input: GoogleSignInInput!) {
-    googleSignIn(input: $input) {
-      token
-      user {
+      subcategories {
         id
-        username
-        email
-        photoUrl
+        name
       }
     }
   }

@@ -13,7 +13,7 @@ import Auctions from "./pages/auctions.jsx";
 import App from "./App.jsx";
 import Contact from "./pages/contact.jsx";
 import { StoreProvider, initialState } from "./utils/GlobalState";
-import ProductItem from "./components/ProductItem/MockItem.jsx";
+import ProductItem from "./components/ProductItem";
 
 const router = createBrowserRouter([
   {
@@ -57,11 +57,9 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <StoreProvider initialState={initialState}>
     <PersistGate persistor={persistor}>
       <Provider store={store}>
         <RouterProvider router={router} />
       </Provider>
     </PersistGate>
-  </StoreProvider>
 );
