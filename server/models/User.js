@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
@@ -43,7 +42,6 @@ const userSchema = new Schema({
     },
   ],
   notifications: [
-    // Add this line to include notifications
     {
       type: Schema.Types.ObjectId,
       ref: "Notification",
@@ -60,7 +58,7 @@ userSchema.pre("save", async function (next) {
     if (this.password) {
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(this.password, saltRounds);
-      console.log("Pre-save hook - Hashed Password:", hashedPassword); // Debug Line
+      console.log("Pre-save hook - Hashed Password:", hashedPassword);
       this.password = hashedPassword;
     }
   }
@@ -68,10 +66,16 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.methods.isCorrectPassword = async function (password) {
-  console.log("Comparing password:", password, "with hashed:", this.password); // Debug Line
-  return this.password ? await bcrypt.compare(password, this.password) : false;
+  console.log("Comparing password:", password, "with hashed:", this.password);
+  try {
+    const match = await bcrypt.compare(password, this.password);
+    console.log("Password comparison result:", match);
+    return match;
+  } catch (error) {
+    console.error("Error during bcrypt.compare:", error);
+    throw error;
+  }
 };
 
 const User = mongoose.model("User", userSchema);
-
 module.exports = User;

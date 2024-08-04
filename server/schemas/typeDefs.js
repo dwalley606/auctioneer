@@ -38,13 +38,19 @@ const typeDefs = gql`
     seller: User!
     bids: [Bid]
     feedbacks: [Feedback]
-    auction: Auction!
+    auction: Auction
   }
 
   type Category {
     id: ID!
     name: String!
+    subcategories: [Subcategory]
     products: [Product]
+  }
+
+  type Subcategory {
+    id: ID!
+    name: String!
   }
 
   type Order {
@@ -102,6 +108,7 @@ const typeDefs = gql`
     products: [Product]
     product(id: ID!): Product
     categories: [Category]
+    category(id: ID!): Category
     orders: [Order]
     feedbacks: [Feedback]
     auctions: [Auction]

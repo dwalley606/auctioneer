@@ -23,6 +23,7 @@ import { useDispatch } from "react-redux";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import { Link } from "react-router-dom";
 import { getToken } from "../../utils/auth";
+import './DashProfile.css';
 
 export default function DashProfile() {
   const { currentUser, error, loading } = useSelector((state) => state.user);
@@ -206,8 +207,8 @@ export default function DashProfile() {
               strokeWidth={5}
               styles={{
                 root: {
-                  width: "100%",
-                  height: "100%",
+                  width: "25px",
+                  height: "25px",
                   position: "absolute",
                   top: 0,
                   left: 0,
@@ -222,7 +223,7 @@ export default function DashProfile() {
           )}
           <img
             src={imageFileUrl || currentUser.profilePicture}
-            alt="user"
+            alt="User"
             className={`rounded-full w-full h-full object-cover border-8 border-[lightgray] ${
               imageFileUploadProgress &&
               imageFileUploadProgress < 100 &&
@@ -326,3 +327,4 @@ export default function DashProfile() {
     </div>
   );
 }
+

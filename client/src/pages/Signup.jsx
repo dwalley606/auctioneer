@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@apollo/client";
 import { useSelector, useDispatch } from "react-redux";
-
-import Auth from "../utils/auth";
+import AuthService from "../utils/auth";
 import { SIGNUP_USER } from "../utils/mutations";
 import OAuth from "../components/OAuth/OAuth";
 import { Alert, Button, Label, Spinner, TextInput } from "flowbite-react";
@@ -12,6 +11,7 @@ import {
   signInSuccess,
   signInFailure,
 } from "../redux/user/userSlice";
+import "./css/Signup.css";
 
 function Signup() {
   const [formState, setFormState] = useState({
@@ -22,6 +22,7 @@ function Signup() {
   const dispatch = useDispatch();
   const [signupUser, { error: mutationError }] = useMutation(SIGNUP_USER);
   const { loading, error: reduxError } = useSelector((state) => state.user);
+  const navigate = useNavigate();
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
@@ -51,8 +52,9 @@ function Signup() {
 
       console.log("Signup response data:", data);
       const token = data.signup.token;
-      Auth.login(token);
+      AuthService.login(token, null); // Assuming you don't have refresh token yet
       dispatch(signInSuccess(data.signup.user));
+      navigate("/");
     } catch (e) {
       console.error("Signup error:", e);
       dispatch(signInFailure(e.message));

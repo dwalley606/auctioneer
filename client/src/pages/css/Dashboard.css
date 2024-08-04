@@ -1,0 +1,27 @@
+
+.Auction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 20px;
+  width: 100%;
+  height: 100%;
+  background-color: lightgray;
+    border-radius: 10px;
+    font-size: large;
+
+}
+
+.currentBids {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 20px;
+  width: 100%;
+  height: 100%;
+  background-color: lightgray;
+  border-radius: 10px;
+font-size: large;
+}

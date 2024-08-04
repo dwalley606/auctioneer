@@ -1,4 +1,3 @@
-// server/models/Product.js
 const mongoose = require("mongoose");
 
 const { Schema } = mongoose;
@@ -44,5 +43,7 @@ const productSchema = new Schema({
 });
 
 const Product = mongoose.model("Product", productSchema);
+
+Product.watch().on("change", (data) => console.log(new Date(), data));
 
 module.exports = Product;

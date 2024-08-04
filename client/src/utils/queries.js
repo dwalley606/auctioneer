@@ -139,57 +139,9 @@ export const GET_CATEGORIES = gql`
     categories {
       id
       name
-    }
-  }
-`;
-
-export const GET_ORDERS = gql`
-  query GetOrders {
-    orders {
-      id
-      buyer {
-        id
-        username
-      }
-      product {
+      subcategories {
         id
         name
-      }
-      amount
-      payment {
-        id
-        method
-        status
-        transactionId
-      }
-    }
-  }
-`;
-
-export const GET_PAYMENTS = gql`
-  query GetPayments {
-    payments {
-      id
-      order {
-        id
-        amount
-      }
-      method
-      status
-      transactionId
-    }
-  }
-`;
-
-export const GOOGLE_SIGN_IN = gql`
-  mutation GoogleSignIn($input: GoogleSignInInput!) {
-    googleSignIn(input: $input) {
-      token
-      user {
-        id
-        username
-        email
-        photoUrl
       }
     }
   }

@@ -11,14 +11,17 @@ import {
 } from "./actions";
 
 export const reducer = (state, action) => {
+  console.log("Reducer action:", action);
   switch (action.type) {
     case UPDATE_PRODUCTS:
+      console.log("Updating products:", action.products);
       return {
         ...state,
         products: [...action.products],
       };
 
     case ADD_TO_CART:
+      console.log("Adding to cart:", action.product);
       return {
         ...state,
         cartOpen: true,
@@ -26,12 +29,14 @@ export const reducer = (state, action) => {
       };
 
     case ADD_MULTIPLE_TO_CART:
+      console.log("Adding multiple to cart:", action.products);
       return {
         ...state,
         cart: [...state.cart, ...action.products],
       };
 
     case UPDATE_CART_QUANTITY:
+      console.log("Updating cart quantity:", action);
       return {
         ...state,
         cartOpen: true,
@@ -44,6 +49,7 @@ export const reducer = (state, action) => {
       };
 
     case REMOVE_FROM_CART:
+      console.log("Removing from cart:", action._id);
       let newState = state.cart.filter((product) => {
         return product._id !== action._id;
       });
@@ -55,6 +61,7 @@ export const reducer = (state, action) => {
       };
 
     case CLEAR_CART:
+      console.log("Clearing cart");
       return {
         ...state,
         cartOpen: false,
@@ -62,24 +69,28 @@ export const reducer = (state, action) => {
       };
 
     case TOGGLE_CART:
+      console.log("Toggling cart");
       return {
         ...state,
         cartOpen: !state.cartOpen,
       };
 
     case UPDATE_CATEGORIES:
+      console.log("Updating categories:", action.categories);
       return {
         ...state,
         categories: [...action.categories],
       };
 
     case UPDATE_CURRENT_CATEGORY:
+      console.log("Updating current category:", action.currentCategory);
       return {
         ...state,
         currentCategory: action.currentCategory,
       };
 
     default:
+      console.log("Unknown action type:", action.type);
       return state;
   }
 };
