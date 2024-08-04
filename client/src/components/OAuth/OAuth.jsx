@@ -5,7 +5,7 @@ import { signInWithPopup } from "firebase/auth";
 import { useDispatch } from "react-redux";
 import { signInStart, signInSuccess, signInFailure } from "../../redux/user/userSlice";
 import { useNavigate } from "react-router-dom";
-import { saveToken } from "../../utils/auth";
+import { setToken } from "../../utils/auth";
 import { useMutation } from "@apollo/client";
 import { GOOGLE_SIGN_IN } from "../../utils/mutations";
 import { auth, googleProvider } from '../../firebase/config';
@@ -49,7 +49,8 @@ export default function OAuth() {
 
       if (data?.googleSignIn?.token) {
         console.log("Sign-in successful, token received");
-        saveToken(data.googleSignIn.token);
+        setToken(data.googleSignIn.token, null); // Assuming you don't have refresh token yet
+        console.log("Token saved to localStorage:", data.googleSignIn.token); // Log token
         dispatch(signInSuccess(data.googleSignIn.user));
         navigate("/");
       } else {

@@ -2,6 +2,7 @@
 
 import Banner from "../components/Banner/Banner";
 import MockList from "../components/ProductList/MockList";
+import ProductList from "../components/ProductList";
 
 const Home = () => {
   return (
@@ -12,7 +13,9 @@ const Home = () => {
         tools, gadgets, and more, Auctioneer is where you can find it!
       </p> */}
       <Banner />
-      <MockList />
+      <ProductList />
+
+      {/* <MockList /> */}
     </div>
   );
 };

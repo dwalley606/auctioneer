@@ -1,6 +1,6 @@
-const { User, Product, Category, Order } = require("../models");
 const { AuthenticationError } = require("apollo-server-express");
 const actions = require("./actions");
+const { Auction, Product, Category, User } = require("../models");
 
 const resolvers = {
   Query: {
@@ -9,81 +9,71 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.getUsers();
+      return actions.getUsers();
     },
-    products: async () => {
-      try {
-        const products = await actions.getProducts();
-        console.log("GraphQL Resolver - Products fetched: ", products);
-        return products;
-      } catch (error) {
-        console.error("GraphQL Resolver - Error fetching products: ", error);
-        throw new Error("Error fetching products");
-      }
-    },
-    categories: async () => {
-      try {
-        const categories = await actions.getCategories();
-        console.log("GraphQL Resolver - Categories fetched: ", categories);
-        return categories;
-      } catch (error) {
-        console.error("GraphQL Resolver - Error fetching categories: ", error);
-        throw new Error("Error fetching categories");
-      }
-    },
+    products: async () => actions.getProducts(),
+    categories: async () => actions.getCategories(),
+    category: async (_, { id }) => actions.getCategoryById(id),
     orders: async (_, __, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.getOrders();
+      return actions.getOrders();
     },
-    feedbacks: async () => {
-      return await actions.getFeedbacks();
-    },
-    auctions: async () => {
-      return await actions.getAuctions();
-    },
-    bids: async () => {
-      return await actions.getBids();
-    },
+    feedbacks: async () => actions.getFeedbacks(),
+    auctions: async () => Auction.find().populate("product"),
+    bids: async () => actions.getBids(),
     payments: async (_, __, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.getPayments();
+      return actions.getPayments();
     },
     notifications: async (_, __, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.getNotifications();
+      return actions.getNotifications();
+    },
+    product: async (_, { id }) => {
+      try {
+        console.log("Fetching product with ID:", id);
+        const product = await Product.findById(id)
+          .populate("category")
+          .populate("seller")
+          .populate({
+            path: "auction",
+            populate: {
+              path: "bids",
+            },
+          });
+
+        if (!product) {
+          console.log("Product not found");
+          throw new Error("Product not found");
+        }
+
+        // Ensure auction field is null if no auction exists
+        if (!product.auction) {
+          product.auction = null;
+        }
+
+        console.log("Product found:", product);
+        return product;
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        throw new Error("Error fetching product");
+      }
     },
   },
   Mutation: {
-    signup: async (_, { username, email, password }) => {
-      return await actions.signup(username, email, password);
-    },
-    login: async (_, { email, password }) => {
-      try {
-        return await actions.login(email, password);
-      } catch (error) {
-        console.error("GraphQL Login Error:", error);
-        throw new AuthenticationError("Invalid credentials");
-      }
-    },
-    googleSignIn: async (parent, { input }) => {
-      return await actions.googleSignIn(parent, { input });
-    },
-    createUser: async (_, { username, email, password }, context) => {
-      if (!context.user)
-        throw new AuthenticationError(
-          "You must be logged in to perform this action"
-        );
-      return await actions.createUser(username, email, password);
-    },
+    signup: async (_, { username, email, password }) =>
+      actions.signup(username, email, password),
+    login: async (_, { email, password }) => actions.login(email, password),
+    googleSignIn: async (parent, { input }) => actions.googleSignIn(input),
     createProduct: async (
       _,
       { name, description, quantity, price, categoryId },
@@ -93,7 +83,7 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.createProduct(
+      return actions.createProduct(
         name,
         description,
         quantity,
@@ -107,21 +97,21 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.createCategory(name);
+      return actions.createCategory(name);
     },
     createOrder: async (_, { productId, amount }, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.createOrder(context.user.id, productId, amount);
+      return actions.createOrder(context.user.id, productId, amount);
     },
     createFeedback: async (_, { productId, rating, comment }, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.createFeedback(
+      return actions.createFeedback(
         context.user.id,
         productId,
         rating,
@@ -137,7 +127,7 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.createAuction(
+      return actions.createAuction(
         productId,
         startTime,
         endTime,
@@ -150,7 +140,7 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.placeBid(context.user.id, productId, amount);
+      return actions.placeBid(context.user.id, productId, amount);
     },
     createPayment: async (
       _,
@@ -161,19 +151,23 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.createPayment(
-        orderId,
-        method,
-        status,
-        transactionId
-      );
+      return actions.createPayment(orderId, method, status, transactionId);
     },
     createNotification: async (_, { userId, message }, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return await actions.createNotification(userId, message);
+      return actions.createNotification(userId, message);
+    },
+  },
+  Category: {
+    subcategories: async (parent) => parent.subcategories,
+  },
+  Auction: {
+    product: async (parent) => {
+      if (!parent.product) return null;
+      return Product.findById(parent.product);
     },
   },
 };

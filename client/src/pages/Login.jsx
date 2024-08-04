@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useMutation } from "@apollo/client";
 import { useDispatch, useSelector } from "react-redux";
-
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LOGIN_USER } from "../utils/mutations";
-import Auth from "../utils/auth";
+import AuthService from "../utils/auth";
 import OAuth from "../components/OAuth/OAuth";
 import { Alert, Button, Label, Spinner, TextInput } from "flowbite-react";
 import {
@@ -12,13 +11,14 @@ import {
   signInSuccess,
   signInFailure,
 } from "../redux/user/userSlice";
-import './css/Login.css'
+import "./css/Login.css";
 
 function Login() {
   const [formState, setFormState] = useState({ email: "", password: "" });
   const dispatch = useDispatch();
   const [login, { error: mutationError }] = useMutation(LOGIN_USER);
   const { loading, error: errorMessage } = useSelector((state) => state.user);
+  const navigate = useNavigate();
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
@@ -45,8 +45,10 @@ function Login() {
 
       console.log("Login response data:", mutationResponse.data);
       const token = mutationResponse.data.login.token;
-      Auth.login(token);
+      AuthService.login(token, null); // Assuming you don't have refresh token yet
+      console.log("Token saved to localStorage:", token); // Log token
       dispatch(signInSuccess(mutationResponse.data.login.user));
+      navigate("/");
     } catch (e) {
       console.error("Login error:", e);
       dispatch(signInFailure(e.message));

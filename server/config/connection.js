@@ -1,11 +1,20 @@
+// server/config/connection.js
 const mongoose = require("mongoose");
 
 mongoose.connect(
-  process.env.MONGODB_URI || "mongodb+srv://prestonnguyen2001:tyEEXceIsyYq4BSh@cluster0.mcelj0z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/mern-shopping",
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   }
 );
+
+mongoose.connection.on("connected", () => {
+  console.log("Mongoose connected to MongoDB");
+});
+
+mongoose.connection.on("error", (err) => {
+  console.error("Mongoose connection error:", err);
+});
 
 module.exports = mongoose.connection;

@@ -1,10 +1,33 @@
 // server/models/Auction.js
-const mongoose = require("mongoose");
 
-const auctionSchema = new mongoose.Schema({
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
+
+const auctionSchema = new Schema({
   product: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "Product",
+    required: true,
+  },
+  bids: [
+    {
+      amount: {
+        type: Number,
+        required: true,
+      },
+      bidder: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      timestamp: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+  startingPrice: {
+    type: Number,
     required: true,
   },
   startTime: {
@@ -15,19 +38,10 @@ const auctionSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  startingPrice: {
-    type: Number,
-    required: true,
-  },
-  bids: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Bid",
-    },
-  ],
   status: {
     type: String,
-    required: true,
+    enum: ["active", "completed", "cancelled"],
+    default: "active",
   },
 });
 
