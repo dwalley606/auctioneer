@@ -1,14 +1,18 @@
-import React from 'react';
+import React from "react";
 import { Button } from "flowbite-react";
 import { AiFillGoogleCircle } from "react-icons/ai";
 import { signInWithPopup } from "firebase/auth";
 import { useDispatch } from "react-redux";
-import { signInStart, signInSuccess, signInFailure } from "../../redux/user/userSlice";
+import {
+  signInStart,
+  signInSuccess,
+  signInFailure,
+} from "../../redux/user/userSlice";
 import { useNavigate } from "react-router-dom";
 import { setToken } from "../../utils/auth";
 import { useMutation } from "@apollo/client";
 import { GOOGLE_SIGN_IN } from "../../utils/mutations";
-import { auth, googleProvider } from '../../firebase/config';
+import { auth, googleProvider } from "../../firebase/config";
 
 export default function OAuth() {
   const dispatch = useDispatch();
@@ -58,16 +62,15 @@ export default function OAuth() {
         throw new Error("Authentication failed: No token received");
       }
     } catch (error) {
-  console.error("Google sign-in error:", error);
-  if (error.graphQLErrors) {
-    console.error("GraphQL errors:", error.graphQLErrors);
-  }
-  if (error.networkError) {
-    console.error("Network error:", error.networkError);
-  }
-  dispatch(signInFailure(error.message || "An unknown error occurred"));
-}
-
+      console.error("Google sign-in error:", error);
+      if (error.graphQLErrors) {
+        console.error("GraphQL errors:", error.graphQLErrors);
+      }
+      if (error.networkError) {
+        console.error("Network error:", error.networkError);
+      }
+      dispatch(signInFailure(error.message || "An unknown error occurred"));
+    }
   };
 
   return (

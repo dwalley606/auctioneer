@@ -10,6 +10,7 @@ import {
   usePlaceBid,
   useGetAuctions,
 } from "../../utils/actions";
+import socket from "../../utils/socket";
 import "./ProductItem.css";
 
 const ProductItem = () => {
@@ -17,8 +18,14 @@ const ProductItem = () => {
   console.log("Product ID:", id);
 
   const { product, loading, error, refetch } = useGetProductDetails(id);
+  const [currentProduct, setCurrentProduct] = useState(null);
 
-  console.log("Product data:", product);
+  useEffect(() => {
+    if (product) {
+      setCurrentProduct(product);
+      console.log("Product data set:", product);
+    }
+  }, [product]);
 
   const dispatch = useDispatch();
   const cart = useSelector(selectCartItems);
@@ -59,22 +66,44 @@ const ProductItem = () => {
     }
   }, [auctionsData, id]);
 
+  // Setup Socket.IO client
+  useEffect(() => {
+    socket.on("bidChange", async (change) => {
+      console.log("Bid change detected:", change);
+      if (change.documentKey._id.toString() === id) {
+        console.log("Matching product ID, refetching data...");
+        try {
+          const { data } = await refetch();
+          console.log("Data refetched after change:", data.product);
+          setCurrentProduct(data.product);
+        } catch (err) {
+          console.error("Error during refetch:", err);
+        }
+      }
+    });
+
+    return () => {
+      socket.off("bidChange");
+    };
+  }, [id, refetch]);
+
   const addToCartHandler = () => {
-    console.log("Adding to cart:", product);
+    console.log("Adding to cart:", currentProduct);
     const itemInCart = cart.find((cartItem) => cartItem.id === id);
     if (itemInCart) {
-      dispatch(addToCart({ ...product, quantity: itemInCart.quantity + 1 }));
+      dispatch(
+        addToCart({ ...currentProduct, quantity: itemInCart.quantity + 1 })
+      );
     } else {
-      dispatch(addToCart({ ...product, quantity: 1 }));
+      dispatch(addToCart({ ...currentProduct, quantity: 1 }));
     }
-    notifyAddedToCart(product);
+    notifyAddedToCart(currentProduct);
   };
 
   const notifyAddedToCart = (item) => {
-    toast.success(`${item.title} added to cart!`, {
+    toast.success(`${item.name} added to cart!`, {
       position: "top-center",
-      autoClose: 2000,
-      hideProgressBar: true,
+      autoClose: 0,
       closeOnClick: true,
       pauseOnHover: true,
       draggable: true,
@@ -106,7 +135,6 @@ const ProductItem = () => {
         toast.success(`New highest bid: $${bidAmount}`, {
           position: "top-center",
           autoClose: 2000,
-          hideProgressBar: true,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
@@ -156,7 +184,7 @@ const ProductItem = () => {
     return <div>Error: {error.message}</div>;
   }
 
-  if (!product) {
+  if (!currentProduct) {
     console.log("Product not found");
     return (
       <div className="product-not-found">
@@ -167,7 +195,7 @@ const ProductItem = () => {
     );
   }
 
-  console.log("Rendering product:", product);
+  console.log("Rendering product:", currentProduct);
 
   return (
     <div className="product-detail-container">
@@ -175,18 +203,21 @@ const ProductItem = () => {
       <div className="product-detail-card">
         <Link to={`/products/${id}`}>
           <img
-            src={product.image}
-            alt={product.title}
+            src={currentProduct.image}
+            alt={currentProduct.name}
             className="product-detail-image"
           />
         </Link>
         <div className="product-detail-info">
-          <h1 className="product-detail-title">{product.title}</h1>
-          <p className="product-detail-description">{product.description}</p>
-          <p className="product-detail-price">${product.price}</p>
+          <h1 className="product-detail-title">{currentProduct.name}</h1>
+          <p className="product-detail-description">
+            {currentProduct.description}
+          </p>
+          <p className="product-detail-price">${currentProduct.price}</p>
           <div>
             <div>
-              {product.quantity} {pluralize("item", product.quantity)} in stock
+              {currentProduct.quantity}{" "}
+              {pluralize("item", currentProduct.quantity)} in stock
             </div>
           </div>
           <button className="product-detail-button" onClick={addToCartHandler}>
