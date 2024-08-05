@@ -3,32 +3,54 @@ const actions = require("./actions");
 const { Auction, Product, Category, User } = require("../models");
 
 const resolvers = {
+  Upload: require("graphql-upload").GraphQLUpload,
   Query: {
     users: async (_, __, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      console.log("Fetching users for authenticated user:", context.user);
       return actions.getUsers();
     },
-    products: async () => actions.getProducts(),
-    categories: async () => actions.getCategories(),
-    category: async (_, { id }) => actions.getCategoryById(id),
+    products: async () => {
+      console.log("Fetching all products...");
+      return actions.getProducts();
+    },
+    categories: async () => {
+      console.log("Fetching all categories...");
+      return actions.getCategories();
+    },
+    category: async (_, { id }) => {
+      console.log("Fetching category with ID:", id);
+      return actions.getCategoryById(id);
+    },
     orders: async (_, __, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      console.log("Fetching orders for authenticated user:", context.user);
       return actions.getOrders();
     },
-    feedbacks: async () => actions.getFeedbacks(),
-    auctions: async () => Auction.find().populate("product"),
-    bids: async () => actions.getBids(),
+    feedbacks: async () => {
+      console.log("Fetching all feedbacks...");
+      return actions.getFeedbacks();
+    },
+    auctions: async () => {
+      console.log("Fetching all auctions...");
+      return Auction.find().populate("product");
+    },
+    bids: async () => {
+      console.log("Fetching all bids...");
+      return actions.getBids();
+    },
     payments: async (_, __, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      console.log("Fetching payments for authenticated user:", context.user);
       return actions.getPayments();
     },
     notifications: async (_, __, context) => {
@@ -36,6 +58,10 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      console.log(
+        "Fetching notifications for authenticated user:",
+        context.user
+      );
       return actions.getNotifications();
     },
     product: async (_, { id }) => {
@@ -76,20 +102,31 @@ const resolvers = {
     googleSignIn: async (parent, { input }) => actions.googleSignIn(input),
     createProduct: async (
       _,
-      { name, description, quantity, price, categoryId },
+      { name, description, quantity, price, categoryId, image },
       context
     ) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+
+      console.log("Received createProduct input:", {
+        name,
+        description,
+        quantity,
+        price,
+        categoryId,
+        image,
+      });
+
       return actions.createProduct(
         name,
         description,
         quantity,
         price,
         categoryId,
-        context.user.id
+        context.user.id,
+        image
       );
     },
     createCategory: async (_, { name }, context) => {

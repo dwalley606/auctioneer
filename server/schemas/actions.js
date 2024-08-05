@@ -15,6 +15,7 @@ const generateToken = (user) => {
 };
 
 const signup = async (username, email, password) => {
+  console.log("Signing up user:", { username, email });
   if (!password) {
     throw new Error("Password is required");
   }
@@ -32,10 +33,12 @@ const signup = async (username, email, password) => {
   const user = new User({ username, email, password });
 
   await user.save();
+  console.log("User signed up:", user);
   return { token: generateToken(user), user };
 };
 
 const login = async (email, password) => {
+  console.log("Logging in user with email:", email);
   const user = await User.findOne({ email });
   if (!user) {
     throw new Error("Invalid credentials");
@@ -47,10 +50,12 @@ const login = async (email, password) => {
   }
 
   const token = generateToken(user);
+  console.log("User logged in:", user);
   return { token, user };
 };
 
 const googleSignIn = async ({ username, email, googleId, photoUrl }) => {
+  console.log("Google sign-in for user:", { username, email });
   let user = await User.findOne({ email });
 
   if (!user) {
@@ -62,10 +67,12 @@ const googleSignIn = async ({ username, email, googleId, photoUrl }) => {
     await user.save();
   }
 
+  console.log("Google sign-in successful:", user);
   return { token: generateToken(user), user };
 };
 
 const signout = async (req, res) => {
+  console.log("Signing out user");
   try {
     res.status(200).json({ message: "Signout successful" });
   } catch (error) {
@@ -76,6 +83,7 @@ const signout = async (req, res) => {
 };
 
 const getUsers = async () => {
+  console.log("Fetching users");
   return User.find();
 };
 
@@ -85,7 +93,8 @@ const createProduct = async (
   quantity,
   price,
   categoryId,
-  sellerId
+  sellerId,
+  image
 ) => {
   const product = new Product({
     name,
@@ -94,6 +103,7 @@ const createProduct = async (
     price,
     category: categoryId,
     seller: sellerId,
+    image,
   });
   await product.save();
   return product;
@@ -181,6 +191,7 @@ const getAuctions = async () => {
 };
 
 const placeBid = async (userId, productId, amount) => {
+  console.log("Placing bid:", { userId, productId, amount });
   const bid = new Bid({
     user: userId,
     product: productId,
@@ -190,11 +201,12 @@ const placeBid = async (userId, productId, amount) => {
   await bid.save();
 
   await Auction.updateOne({ product: productId }, { $push: { bids: bid._id } });
-
+  console.log("Bid placed:", bid);
   return bid;
 };
 
 const getBids = async () => {
+  console.log("Fetching bids");
   return Bid.find().populate("user").populate("product");
 };
 

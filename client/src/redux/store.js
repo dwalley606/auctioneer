@@ -1,4 +1,4 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import userReducer from "./user/userSlice";
@@ -6,30 +6,28 @@ import cartReducer from "./cart/cartSlice";
 import auctionReducer from "./auction/auctionSlice";
 import productsReducer from "./products/productsSlice";
 import categoriesReducer from "./categories/categoriesSlice";
+import authReducer from "./auth/authSlice";
 
-const userPersistConfig = {
-  key: "user",
+const rootReducer = combineReducers({
+  user: userReducer,
+  cart: cartReducer,
+  auction: auctionReducer,
+  products: productsReducer,
+  categories: categoriesReducer,
+  auth: authReducer,
+});
+
+const persistConfig = {
+  key: "root",
   storage,
   version: 1,
+  whitelist: ["user", "auth"], // Ensure auth and user states are persisted
 };
 
-const cartPersistConfig = {
-  key: "cart",
-  storage,
-  version: 1,
-};
-
-const persistedUserReducer = persistReducer(userPersistConfig, userReducer);
-const persistedCartReducer = persistReducer(cartPersistConfig, cartReducer);
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
-  reducer: {
-    user: persistedUserReducer,
-    cart: persistedCartReducer,
-    auction: auctionReducer,
-    products: productsReducer,
-    categories: categoriesReducer,
-  },
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
@@ -38,12 +36,10 @@ export const store = configureStore({
     }),
 });
 
-store.subscribe(() => {
-  // console.log("Store state:", store.getState());
-});
-
 export const persistor = persistStore(store);
 
-// console.log("Initial store state:", store.getState());
+store.subscribe(() => {
+  console.log("Store state:", store.getState());
+});
 
 export default store;

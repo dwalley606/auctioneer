@@ -1,6 +1,8 @@
 const { gql } = require("apollo-server-express");
 
 const typeDefs = gql`
+  scalar Upload
+
   type User {
     id: ID!
     username: String!
@@ -126,9 +128,11 @@ const typeDefs = gql`
     createProduct(
       name: String!
       description: String!
-      quantity: Int!
       price: Float!
+      quantity: Int!
       categoryId: ID!
+      image: String!
+      userId: ID!
     ): Product
     createCategory(name: String!): Category
     placeBid(productId: ID!, amount: Float!): Bid

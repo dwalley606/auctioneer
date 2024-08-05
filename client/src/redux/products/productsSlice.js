@@ -25,7 +25,8 @@ const CREATE_PRODUCT = gql`
     $price: Float!
     $quantity: Int!
     $categoryId: ID!
-    $image: Upload!
+    $image: String!
+    $userId: ID!
   ) {
     createProduct(
       name: $name
@@ -34,6 +35,7 @@ const CREATE_PRODUCT = gql`
       quantity: $quantity
       categoryId: $categoryId
       image: $image
+      userId: $userId
     ) {
       id
       name
@@ -45,6 +47,10 @@ const CREATE_PRODUCT = gql`
         name
       }
       image
+      user {
+        id
+        username
+      }
     }
   }
 `;
@@ -53,13 +59,16 @@ export const createProduct = createAsyncThunk(
   "products/createProduct",
   async (productData, thunkAPI) => {
     try {
+      const state = thunkAPI.getState();
+      const userId = state.auth.user.id; // Assuming you store user info in auth slice
+
       const formData = new FormData();
       formData.append(
         "operations",
         JSON.stringify({
           query: `
-          mutation CreateProduct($name: String!, $description: String!, $price: Float!, $quantity: Int!, $categoryId: ID!, $image: Upload!) {
-            createProduct(name: $name, description: $description, price: $price, quantity: $quantity, categoryId: $categoryId, image: $image) {
+          mutation CreateProduct($name: String!, $description: String!, $price: Float!, $quantity: Int!, $categoryId: ID!, $image: Upload!, $userId: ID!) {
+            createProduct(name: $name, description: $description, price: $price, quantity: $quantity, categoryId: $categoryId, image: $image, userId: $userId) {
               id
               name
               description
@@ -70,6 +79,10 @@ export const createProduct = createAsyncThunk(
                 name
               }
               image
+              user {
+                id
+                username
+              }
             }
           }
         `,
@@ -80,6 +93,7 @@ export const createProduct = createAsyncThunk(
             quantity: parseInt(productData.quantity, 10),
             categoryId: productData.category,
             image: null,
+            userId: userId,
           },
         })
       );
@@ -97,6 +111,7 @@ export const createProduct = createAsyncThunk(
       }
       return result.data.createProduct;
     } catch (error) {
+      console.error("Error creating product:", error);
       return thunkAPI.rejectWithValue(error.message);
     }
   }

@@ -1,23 +1,19 @@
-// client/src/utils/auth.js
 
 export const setToken = (token) => {
-  console.log("Saving token:", token); // Debugging line
+  console.log("Saving token:", token);
   if (token) {
     document.cookie = `access_token=${token}; path=/; SameSite=None; Secure`;
-    console.log("Token saved in cookie:", document.cookie); // Debugging line
+    console.log("Token saved in cookie:", document.cookie);
   }
 };
 
 export const getAuthHeaders = () => {
   try {
-    // console.log("Document:", document);
-    // console.log("Document.cookie:", document.cookie);
-    // console.log("Cookies enabled:", navigator.cookieEnabled);
     const token = document.cookie
       .split("; ")
       .find((row) => row.startsWith("access_token="))
       ?.split("=")[1];
-    // console.log("Retrieved token from cookie:", token); // Debugging line
+    console.log("Retrieved token from cookie:", token);
     return {
       Authorization: token ? `Bearer ${token}` : undefined,
     };
@@ -29,14 +25,11 @@ export const getAuthHeaders = () => {
 
 export const getToken = () => {
   try {
-    // console.log("Document:", document);
-    // console.log("Document.cookie:", document.cookie);
-    // console.log("Cookies enabled:", navigator.cookieEnabled);
     const token = document.cookie
       .split("; ")
       .find((row) => row.startsWith("access_token="))
       ?.split("=")[1];
-    // console.log("Retrieved token from cookie:", token); // Debugging line
+    console.log("Retrieved token from cookie:", token);
     return token;
   } catch (error) {
     console.error("Error retrieving token:", error);
@@ -46,7 +39,7 @@ export const getToken = () => {
 
 export const isTokenExpired = (token) => {
   try {
-    const decoded = jwtDecode(token);
+    const decoded = decode(token);
     console.log("Decoded token:", decoded);
     const isExpired = decoded.exp * 1000 < Date.now();
     console.log("Token is expired:", isExpired);
@@ -59,12 +52,11 @@ export const isTokenExpired = (token) => {
 
 export const getValidToken = () => {
   const token = getToken();
-  // console.log("Retrieved token for validation:", token); // Debugging line
+  console.log("Retrieved token for validation:", token); // Debugging line
   const validToken = !token || isTokenExpired(token) ? null : token;
-  // console.log("Valid token:", validToken); // Debugging line
+  console.log("Valid token:", validToken); // Debugging line
   return validToken;
 };
-
 
 class AuthService {
   getProfile() {
@@ -97,8 +89,16 @@ class AuthService {
   }
 
   login(idToken) {
-    saveToken(idToken);
+    this.setToken(idToken);
     window.location.assign("/");
+  }
+
+  setToken(token) {
+    console.log("Saving token:", token);
+    if (token) {
+      document.cookie = `access_token=${token}; path=/; SameSite=None; Secure`;
+      console.log("Token saved in cookie:", document.cookie);
+    }
   }
 
   logout() {

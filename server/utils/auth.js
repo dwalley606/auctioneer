@@ -1,39 +1,43 @@
-// server/utils/auth.js
-const jwt = require('jsonwebtoken');
-const { AuthenticationError } = require('apollo-server-express');
-const admin = require('../firebase');
+const jwt = require("jsonwebtoken");
+const { AuthenticationError } = require("apollo-server-express");
+const admin = require("../firebase");
 
 const secret = process.env.JWT_SECRET || "your_secret_key";
 const expiration = "2h";
 
 module.exports = {
-  AuthenticationError: new AuthenticationError(
-    "You must be logged in to perform this action"
-  ),
-
   authMiddleware: function ({ req }) {
-    let token = req.body.token || req.query.token || req.headers.authorization;
+    let token =
+      req.body.token ||
+      req.query.token ||
+      req.headers.authorization ||
+      req.cookies.access_token;
+
+    console.log("Request context:", req);
+    console.log("Fetching all products...");
 
     if (req.headers.authorization) {
       token = token.split(" ").pop().trim();
     }
 
     if (!token) {
+      console.log("No token found");
       return req;
     }
 
     try {
       const { data } = jwt.verify(token, secret, { maxAge: expiration });
       req.user = data;
-    } catch {
-      console.log("Invalid token");
+      console.log("Authenticated user:", data);
+    } catch (error) {
+      console.log("Invalid token", error.message);
     }
 
     return req;
   },
 
-  signToken: function ({ email, username, _id }) {
-    const payload = { email, username, _id };
+  signToken: function ({ id, username, email }) {
+    const payload = { id, username, email };
     return jwt.sign({ data: payload }, secret, { expiresIn: expiration });
   },
 

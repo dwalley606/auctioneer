@@ -29,28 +29,34 @@ export const CREATE_PRODUCT = gql`
     $name: String!
     $description: String!
     $price: Float!
+    $quantity: Int!
     $categoryId: ID!
+    $image: String!
   ) {
     createProduct(
       name: $name
       description: $description
       price: $price
+      quantity: $quantity
       categoryId: $categoryId
+      image: $image
     ) {
       id
       name
       description
       price
+      quantity
       category {
         id
         name
       }
+      image
     }
   }
 `;
 
 export const PLACE_BID = gql`
-  mutation placeBid($productId: ID!, $amount: Float!) {
+  mutation PlaceBid($productId: ID!, $amount: Float!) {
     placeBid(productId: $productId, amount: $amount) {
       id
       user {
@@ -64,8 +70,8 @@ export const PLACE_BID = gql`
 `;
 
 export const CREATE_ORDER = gql`
-  mutation CreateOrder($productId: ID!) {
-    createOrder(productId: $productId) {
+  mutation CreateOrder($productId: ID!, $amount: Float!) {
+    createOrder(productId: $productId, amount: $amount) {
       id
       product {
         id
