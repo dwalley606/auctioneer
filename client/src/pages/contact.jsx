@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import './css/contact.css';
+
     const Contact = () => {
         const [email, setEmail] = useState('');
         const [question, setQuestion] = useState('');
@@ -16,7 +18,7 @@ import { Link } from 'react-router-dom';
          };
 
         return (
-              <div>
+              <div className='contact-menu'>
                 <h1>Company Information</h1>
                 <p>Owner: PDJK Corp. </p>
                 <p>Email: generalResourceInform@Pdjk.org</p>
