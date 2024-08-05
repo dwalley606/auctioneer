@@ -6,6 +6,8 @@ export const GET_PRODUCTS = gql`
       id
       name
       description
+      image
+      quantity
       price
       category {
         id
@@ -16,7 +18,7 @@ export const GET_PRODUCTS = gql`
         username
       }
       auction {
-id
+        id
         startTime
         endTime
         status
@@ -31,6 +33,8 @@ export const GET_PRODUCT_DETAILS = gql`
       id
       name
       description
+      image
+      quantity
       price
       category {
         id
@@ -41,7 +45,7 @@ export const GET_PRODUCT_DETAILS = gql`
         username
       }
       auction {
-id
+        id
         startTime
         endTime
         status
@@ -99,24 +103,13 @@ export const GET_CATEGORIES = gql`
     categories {
       id
       name
-    }
-  }
-`;
-
-export const GOOGLE_SIGN_IN = gql`
-  mutation GoogleSignIn($input: GoogleSignInInput!) {
-    googleSignIn(input: $input) {
-      token
-      user {
+      subcategories {
         id
-        username
-        email
-        photoUrl
+        name
       }
     }
   }
 `;
-
 
 export const QUERY_CHECKOUT = gql`
   query getCheckout($products: [ProductInput]) {

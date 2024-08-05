@@ -1,24 +1,23 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const bidSchema = new mongoose.Schema({
-    user: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User' 
-    },
-    product: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Product' 
-    },
-    amount: { 
-        type: Number, 
-        required: true 
-    },
-    timestamp: { 
-        type: Date, 
-        default: Date.now 
-    }
+const bidSchema = new Schema({
+  amount: {
+    type: Number,
+    required: true,
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: "User", // Ensure this references the User schema
+  },
+  product: {
+    type: Schema.Types.ObjectId,
+    ref: "Product",
+  },
 });
 
-const Bid = mongoose.model('Bid', bidSchema);
-
-module.exports = Bid;
+module.exports = mongoose.model("Bid", bidSchema);

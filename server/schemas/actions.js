@@ -7,53 +7,42 @@ const Auction = require("../models/Auction");
 const Bid = require("../models/Bid");
 const Payment = require("../models/Payment");
 const Notification = require("../models/Notification");
-const { ObjectId } = require("mongoose");
-
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
-// User Actions
 const generateToken = (user) => {
   return jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 };
 
 const signup = async (username, email, password) => {
-  console.log("Signup called with:", { username, email, password });
-
   if (!password) {
     throw new Error("Password is required");
   }
 
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    console.log("Email already in use");
+  const existingUserByEmail = await User.findOne({ email });
+  if (existingUserByEmail) {
     throw new Error("Email already in use");
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = new User({
-    username,
-    email,
-    password: hashedPassword,
-  });
+  const existingUserByUsername = await User.findOne({ username });
+  if (existingUserByUsername) {
+    throw new Error("Username already in use");
+  }
+
+  const user = new User({ username, email, password });
+
   await user.save();
-  const token = generateToken(user);
-  console.log("User created:", user);
-  return { token, user };
+  return { token: generateToken(user), user };
 };
 
 const login = async (email, password) => {
-  console.log("Login called with:", { email, password }); // Debugging line
-
   const user = await User.findOne({ email });
   if (!user) {
-    console.error("User not found"); // Debugging line
     throw new Error("Invalid credentials");
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
+  const isMatch = await user.isCorrectPassword(password);
   if (!isMatch) {
-    console.error("Password does not match"); // Debugging line
     throw new Error("Invalid credentials");
   }
 
@@ -61,32 +50,19 @@ const login = async (email, password) => {
   return { token, user };
 };
 
-const googleSignIn = async (parent, { input }) => {
-  try {
-    console.log("Google sign-in attempt for email:", input.email);
-    let user = await User.findOne({ email: input.email });
+const googleSignIn = async ({ username, email, googleId, photoUrl }) => {
+  let user = await User.findOne({ email });
 
-    if (!user) {
-      user = await User.create({
-        username: input.username,
-        email: input.email,
-        googleId: input.googleId,
-        photoUrl: input.photoUrl,
-      });
-      console.log("New user created:", user);
-    } else if (!user.googleId) {
-      user.googleId = input.googleId;
-      user.photoUrl = input.photoUrl;
-      await user.save();
-      console.log("User updated with Google ID:", user);
-    }
-
-    const token = generateToken(user);
-    return { token, user };
-  } catch (error) {
-    console.error("Google sign-in error:", error);
-    throw new Error("Unable to authenticate with Google");
+  if (!user) {
+    user = new User({ username, email, googleId, photoUrl });
+    await user.save();
+  } else if (!user.googleId) {
+    user.googleId = googleId;
+    user.photoUrl = photoUrl;
+    await user.save();
   }
+
+  return { token: generateToken(user), user };
 };
 
 const signout = async (req, res) => {
@@ -100,10 +76,9 @@ const signout = async (req, res) => {
 };
 
 const getUsers = async () => {
-  return await User.find();
+  return User.find();
 };
 
-// Product Actions
 const createProduct = async (
   name,
   description,
@@ -120,24 +95,24 @@ const createProduct = async (
     category: categoryId,
     seller: sellerId,
   });
-  return await product.save();
+  await product.save();
+  return product;
 };
 
 const getProducts = async () => {
-  return await Product.find().populate("category").populate("seller");
+  return Product.find().populate("category");
 };
 
-// Category Actions
 const createCategory = async (name) => {
   const category = new Category({ name });
-  return await category.save();
+  await category.save();
+  return category;
 };
 
 const getCategories = async () => {
-  return await Category.find();
+  return Category.find();
 };
 
-// Order Actions
 const createOrder = async (buyerId, productId, amount, paymentId) => {
   const order = new Order({
     buyer: buyerId,
@@ -145,17 +120,14 @@ const createOrder = async (buyerId, productId, amount, paymentId) => {
     amount,
     payment: paymentId,
   });
-  return await order.save();
+  await order.save();
+  return order;
 };
 
 const getOrders = async () => {
-  return await Order.find()
-    .populate("buyer")
-    .populate("product")
-    .populate("payment");
+  return Order.find().populate("buyer").populate("product").populate("payment");
 };
 
-// Feedback Actions
 const createFeedback = async (
   fromUserId,
   toUserId,
@@ -170,14 +142,17 @@ const createFeedback = async (
     rating,
     comment,
   });
-  return await feedback.save();
+  await feedback.save();
+  return feedback;
 };
 
 const getFeedbacks = async () => {
-  return await Feedback.find().populate("user").populate("product");
+  return Feedback.find()
+    .populate("fromUser")
+    .populate("toUser")
+    .populate("product");
 };
 
-// Auction Actions
 const createAuction = async (
   productId,
   startTime,
@@ -185,6 +160,11 @@ const createAuction = async (
   startingPrice,
   status
 ) => {
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new Error(`Product with ID ${productId} does not exist`);
+  }
+
   const auction = new Auction({
     product: productId,
     startTime,
@@ -192,37 +172,32 @@ const createAuction = async (
     startingPrice,
     status,
   });
-  return await auction.save();
+  await auction.save();
+  return auction;
 };
 
 const getAuctions = async () => {
-  return await Auction.find().populate("product").populate("bids");
+  return Auction.find().populate("product").populate("bids");
 };
 
-// Bid Actions
-const createBid = async (userId, productId, amount) => {
+const placeBid = async (userId, productId, amount) => {
   const bid = new Bid({
     user: userId,
     product: productId,
     amount,
     timestamp: new Date(),
   });
-  const createdBid = await bid.save();
+  await bid.save();
 
-  return {
-    _id: createdBid._id,
-    user: createdBid.user,
-    product: createdBid.product,
-    amount: createdBid.amount,
-    timestamp: createdBid.timestamp,
-  };
+  await Auction.updateOne({ product: productId }, { $push: { bids: bid._id } });
+
+  return bid;
 };
 
 const getBids = async () => {
-  return await Bid.find().populate("user").populate("product");
+  return Bid.find().populate("user").populate("product");
 };
 
-// Payment Actions
 const createPayment = async (orderId, method, status, transactionId) => {
   const payment = new Payment({
     order: orderId,
@@ -230,14 +205,14 @@ const createPayment = async (orderId, method, status, transactionId) => {
     status,
     transactionId,
   });
-  return await payment.save();
+  await payment.save();
+  return payment;
 };
 
 const getPayments = async () => {
-  return await Payment.find().populate("order");
+  return Payment.find().populate("order");
 };
 
-// Notification Actions
 const createNotification = async (userId, message) => {
   const notification = new Notification({
     user: userId,
@@ -245,19 +220,12 @@ const createNotification = async (userId, message) => {
     read: false,
     timestamp: new Date(),
   });
-  const createdNotification = await notification.save();
-
-  return {
-    _id: createdNotification._id,
-    user: createdNotification.user,
-    message: createdNotification.message,
-    read: createdNotification.read,
-    timestamp: createdNotification.timestamp,
-  };
+  await notification.save();
+  return notification;
 };
 
 const getNotifications = async () => {
-  return await Notification.find().populate("user");
+  return Notification.find().populate("user");
 };
 
 module.exports = {
@@ -276,7 +244,7 @@ module.exports = {
   getFeedbacks,
   createAuction,
   getAuctions,
-  createBid,
+  placeBid,
   getBids,
   createPayment,
   getPayments,

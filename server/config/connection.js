@@ -1,3 +1,4 @@
+// server/config/connection.js
 const mongoose = require("mongoose");
 
 mongoose.connect(
@@ -7,5 +8,13 @@ mongoose.connect(
     useUnifiedTopology: true,
   }
 );
+
+mongoose.connection.on("connected", () => {
+  console.log("Mongoose connected to MongoDB");
+});
+
+mongoose.connection.on("error", (err) => {
+  console.error("Mongoose connection error:", err);
+});
 
 module.exports = mongoose.connection;

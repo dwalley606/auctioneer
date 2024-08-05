@@ -1,21 +1,23 @@
-import {jwtDecode} from "jwt-decode";
+// client/src/utils/auth.js
 
-export const saveToken = (token) => {
+export const setToken = (token) => {
+  console.log("Saving token:", token); // Debugging line
   if (token) {
     document.cookie = `access_token=${token}; path=/; SameSite=None; Secure`;
+    console.log("Token saved in cookie:", document.cookie); // Debugging line
   }
 };
 
 export const getAuthHeaders = () => {
   try {
-    console.log("Document:", document);
-    console.log("Document.cookie:", document.cookie);
-    console.log("Cookies enabled:", navigator.cookieEnabled);
+    // console.log("Document:", document);
+    // console.log("Document.cookie:", document.cookie);
+    // console.log("Cookies enabled:", navigator.cookieEnabled);
     const token = document.cookie
       .split("; ")
       .find((row) => row.startsWith("access_token="))
       ?.split("=")[1];
-    console.log("Retrieved token from cookie:", token); // Debugging line
+    // console.log("Retrieved token from cookie:", token); // Debugging line
     return {
       Authorization: token ? `Bearer ${token}` : undefined,
     };
@@ -27,14 +29,14 @@ export const getAuthHeaders = () => {
 
 export const getToken = () => {
   try {
-    console.log("Document:", document);
-    console.log("Document.cookie:", document.cookie);
-    console.log("Cookies enabled:", navigator.cookieEnabled);
+    // console.log("Document:", document);
+    // console.log("Document.cookie:", document.cookie);
+    // console.log("Cookies enabled:", navigator.cookieEnabled);
     const token = document.cookie
       .split("; ")
       .find((row) => row.startsWith("access_token="))
       ?.split("=")[1];
-    console.log("Retrieved token from cookie:", token); // Debugging line
+    // console.log("Retrieved token from cookie:", token); // Debugging line
     return token;
   } catch (error) {
     console.error("Error retrieving token:", error);
@@ -57,9 +59,9 @@ export const isTokenExpired = (token) => {
 
 export const getValidToken = () => {
   const token = getToken();
-  console.log("Retrieved token for validation:", token); // Debugging line
+  // console.log("Retrieved token for validation:", token); // Debugging line
   const validToken = !token || isTokenExpired(token) ? null : token;
-  console.log("Valid token:", validToken); // Debugging line
+  // console.log("Valid token:", validToken); // Debugging line
   return validToken;
 };
 

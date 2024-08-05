@@ -1,43 +1,96 @@
 import {
-    UPDATE_PRODUCTS,
-    ADD_TO_CART,
-    UPDATE_CART_QUANTITY,
-    REMOVE_FROM_CART,
-    ADD_MULTIPLE_TO_CART,
-    UPDATE_CATEGORIES,
-    UPDATE_CURRENT_CATEGORY,
-    CLEAR_CART,
-    TOGGLE_CART,
-  } from './actions';
+  UPDATE_PRODUCTS,
+  ADD_TO_CART,
+  ADD_MULTIPLE_TO_CART,
+  REMOVE_FROM_CART,
+  UPDATE_CART_QUANTITY,
+  CLEAR_CART,
+  TOGGLE_CART,
+  UPDATE_CATEGORIES,
+  UPDATE_CURRENT_CATEGORY,
+} from "./actions";
 
-  // The reducer is a function that accepts the current state and an action. It returns a new state based on that action.
-  export const reducer = (state, action) => {
-    switch (action.type) {
-      // Returns a copy of state with an update products array. We use the action.products property and spread it's contents into the new array.
-      case UPDATE_PRODUCTS:
-        return {
-          ...state,
-          products: [...action.products],
-        };
+export const reducer = (state, action) => {
+  console.log("Reducer action:", action);
+  switch (action.type) {
+    case UPDATE_PRODUCTS:
+      console.log("Updating products:", action.products);
+      return {
+        ...state,
+        products: [...action.products],
+      };
 
-      case UPDATE_CATEGORIES:
-        return {
-          ...state,
-          categories: [...action.categories],
-        };
+    case ADD_TO_CART:
+      console.log("Adding to cart:", action.product);
+      return {
+        ...state,
+        cartOpen: true,
+        cart: [...state.cart, action.product],
+      };
 
-      case UPDATE_CURRENT_CATEGORY:
-        return {
-          ...state,
-          currentCategory: action.currentCategory,
-        };
+    case ADD_MULTIPLE_TO_CART:
+      console.log("Adding multiple to cart:", action.products);
+      return {
+        ...state,
+        cart: [...state.cart, ...action.products],
+      };
 
-      case TOGGLE_CART:
-        return {
-          ...state,
-          cartOpen: !state.cartOpen,
-        };
-      default:
-        return state;
-    }
-  };
+    case UPDATE_CART_QUANTITY:
+      console.log("Updating cart quantity:", action);
+      return {
+        ...state,
+        cartOpen: true,
+        cart: state.cart.map((product) => {
+          if (action._id === product._id) {
+            product.purchaseQuantity = action.purchaseQuantity;
+          }
+          return product;
+        }),
+      };
+
+    case REMOVE_FROM_CART:
+      console.log("Removing from cart:", action._id);
+      let newState = state.cart.filter((product) => {
+        return product._id !== action._id;
+      });
+
+      return {
+        ...state,
+        cartOpen: newState.length > 0,
+        cart: newState,
+      };
+
+    case CLEAR_CART:
+      console.log("Clearing cart");
+      return {
+        ...state,
+        cartOpen: false,
+        cart: [],
+      };
+
+    case TOGGLE_CART:
+      console.log("Toggling cart");
+      return {
+        ...state,
+        cartOpen: !state.cartOpen,
+      };
+
+    case UPDATE_CATEGORIES:
+      console.log("Updating categories:", action.categories);
+      return {
+        ...state,
+        categories: [...action.categories],
+      };
+
+    case UPDATE_CURRENT_CATEGORY:
+      console.log("Updating current category:", action.currentCategory);
+      return {
+        ...state,
+        currentCategory: action.currentCategory,
+      };
+
+    default:
+      console.log("Unknown action type:", action.type);
+      return state;
+  }
+};

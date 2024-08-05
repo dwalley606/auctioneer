@@ -31,8 +31,19 @@ const productSchema = new Schema({
     ref: "Category",
     required: true,
   },
+  seller: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  auction: {
+    type: Schema.Types.ObjectId,
+    ref: "Auction",
+  },
 });
 
 const Product = mongoose.model("Product", productSchema);
+
+Product.watch().on("change", (data) => console.log(new Date(), data));
 
 module.exports = Product;
