@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import './css/auctions.css';
 
 const Auctions = () => {
     const [userAuctions, setUserAuctions] = useState([]);
-    const [startedAuctions, setStartedAuctions] = useState([]);
     const [itemName, setItemName] = useState('');
     const [itemDescription, setItemDescription] = useState('');
     const [startingBid, setStartingBid] = useState(0);
@@ -44,17 +44,10 @@ const Auctions = () => {
     }, []);
 
     return (
-        <div>
-            <h1>User Auctions</h1>
+        <div className='user-Auctions'>
+          <h1>User Auctions</h1>
             <ul>
                 {Array.isArray(userAuctions) && userAuctions.map((auction) => (
-                    <li key={auction.id}>{auction.name}</li>
-                ))}
-            </ul>
-
-            <h1>Started Auctions</h1>
-            <ul>
-                {Array.isArray(startedAuctions) && startedAuctions.map((auction) => (
                     <li key={auction.id}>{auction.name}</li>
                 ))}
             </ul>
