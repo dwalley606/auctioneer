@@ -3,9 +3,9 @@ import {
   GET_PRODUCTS,
   GET_PRODUCT_DETAILS,
   GET_USER_PROFILE,
-  GET_USERS,
-  GET_ORDERS,
-  GET_PAYMENTS,
+  // GET_USERS,
+  // GET_ORDERS,
+  // GET_PAYMENTS,
   GET_AUCTIONS,
   GET_CATEGORIES,
 } from "./queries";
@@ -13,14 +13,14 @@ import {
   LOGIN_USER,
   SIGNUP_USER,
   CREATE_PRODUCT,
-  CREATE_BID,
+  // CREATE_BID,
   CREATE_ORDER,
-  CREATE_CATEGORY,
-  UPDATE_CATEGORY,
-  CREATE_FEEDBACK,
-  CREATE_PAYMENT,
-  CREATE_NOTIFICATION,
-  CREATE_AUCTION,
+  // CREATE_CATEGORY,
+  // UPDATE_CATEGORY,
+  // CREATE_FEEDBACK,
+  // CREATE_PAYMENT,
+  // CREATE_NOTIFICATION,
+  // CREATE_AUCTION,
   GOOGLE_SIGN_IN,
 } from "./mutations";
 import { getAuthHeaders } from "./auth";
@@ -118,7 +118,6 @@ export const usePlaceBid = () => {
     },
   });
 };
-
 
 export const useCreateOrder = () => {
   return useMutation(CREATE_ORDER, {
