@@ -15,49 +15,32 @@ const generateToken = (user) => {
 };
 
 const signup = async (username, email, password) => {
-  console.log("Signing up user:", { username, email });
-  if (!password) {
-    throw new Error("Password is required");
-  }
+  if (!password) throw new Error("Password is required");
 
   const existingUserByEmail = await User.findOne({ email });
-  if (existingUserByEmail) {
-    throw new Error("Email already in use");
-  }
+  if (existingUserByEmail) throw new Error("Email already in use");
 
   const existingUserByUsername = await User.findOne({ username });
-  if (existingUserByUsername) {
-    throw new Error("Username already in use");
-  }
+  if (existingUserByUsername) throw new Error("Username already in use");
 
   const user = new User({ username, email, password });
-
   await user.save();
-  console.log("User signed up:", user);
   return { token: generateToken(user), user };
 };
 
 const login = async (email, password) => {
-  console.log("Logging in user with email:", email);
   const user = await User.findOne({ email });
-  if (!user) {
-    throw new Error("Invalid credentials");
-  }
+  if (!user) throw new Error("Invalid credentials");
 
   const isMatch = await user.isCorrectPassword(password);
-  if (!isMatch) {
-    throw new Error("Invalid credentials");
-  }
+  if (!isMatch) throw new Error("Invalid credentials");
 
   const token = generateToken(user);
-  console.log("User logged in:", user);
   return { token, user };
 };
 
 const googleSignIn = async ({ username, email, googleId, photoUrl }) => {
-  console.log("Google sign-in for user:", { username, email });
   let user = await User.findOne({ email });
-
   if (!user) {
     user = new User({ username, email, googleId, photoUrl });
     await user.save();
@@ -67,12 +50,10 @@ const googleSignIn = async ({ username, email, googleId, photoUrl }) => {
     await user.save();
   }
 
-  console.log("Google sign-in successful:", user);
   return { token: generateToken(user), user };
 };
 
 const signout = async (req, res) => {
-  console.log("Signing out user");
   try {
     res.status(200).json({ message: "Signout successful" });
   } catch (error) {
@@ -82,10 +63,7 @@ const signout = async (req, res) => {
   }
 };
 
-const getUsers = async () => {
-  console.log("Fetching users");
-  return User.find();
-};
+const getUsers = async () => User.find();
 
 const createProduct = async (
   name,
@@ -109,9 +87,7 @@ const createProduct = async (
   return product;
 };
 
-const getProducts = async () => {
-  return Product.find().populate("category");
-};
+const getProducts = async () => Product.find().populate("category");
 
 const createCategory = async (name) => {
   const category = new Category({ name });
@@ -119,9 +95,7 @@ const createCategory = async (name) => {
   return category;
 };
 
-const getCategories = async () => {
-  return Category.find();
-};
+const getCategories = async () => Category.find();
 
 const createOrder = async (buyerId, productId, amount, paymentId) => {
   const order = new Order({
@@ -134,9 +108,8 @@ const createOrder = async (buyerId, productId, amount, paymentId) => {
   return order;
 };
 
-const getOrders = async () => {
-  return Order.find().populate("buyer").populate("product").populate("payment");
-};
+const getOrders = async () =>
+  Order.find().populate("buyer").populate("product").populate("payment");
 
 const createFeedback = async (
   fromUserId,
@@ -156,12 +129,8 @@ const createFeedback = async (
   return feedback;
 };
 
-const getFeedbacks = async () => {
-  return Feedback.find()
-    .populate("fromUser")
-    .populate("toUser")
-    .populate("product");
-};
+const getFeedbacks = async () =>
+  Feedback.find().populate("fromUser").populate("toUser").populate("product");
 
 const createAuction = async (
   productId,
@@ -171,9 +140,7 @@ const createAuction = async (
   status
 ) => {
   const product = await Product.findById(productId);
-  if (!product) {
-    throw new Error(`Product with ID ${productId} does not exist`);
-  }
+  if (!product) throw new Error(`Product with ID ${productId} does not exist`);
 
   const auction = new Auction({
     product: productId,
@@ -186,12 +153,10 @@ const createAuction = async (
   return auction;
 };
 
-const getAuctions = async () => {
-  return Auction.find().populate("product").populate("bids");
-};
+const getAuctions = async () =>
+  Auction.find().populate("product").populate("bids");
 
 const placeBid = async (userId, productId, amount) => {
-  console.log("Placing bid:", { userId, productId, amount });
   const bid = new Bid({
     user: userId,
     product: productId,
@@ -199,16 +164,11 @@ const placeBid = async (userId, productId, amount) => {
     timestamp: new Date(),
   });
   await bid.save();
-
   await Auction.updateOne({ product: productId }, { $push: { bids: bid._id } });
-  console.log("Bid placed:", bid);
   return bid;
 };
 
-const getBids = async () => {
-  console.log("Fetching bids");
-  return Bid.find().populate("user").populate("product");
-};
+const getBids = async () => Bid.find().populate("user").populate("product");
 
 const createPayment = async (orderId, method, status, transactionId) => {
   const payment = new Payment({
@@ -221,9 +181,7 @@ const createPayment = async (orderId, method, status, transactionId) => {
   return payment;
 };
 
-const getPayments = async () => {
-  return Payment.find().populate("order");
-};
+const getPayments = async () => Payment.find().populate("order");
 
 const createNotification = async (userId, message) => {
   const notification = new Notification({
@@ -236,9 +194,7 @@ const createNotification = async (userId, message) => {
   return notification;
 };
 
-const getNotifications = async () => {
-  return Notification.find().populate("user");
-};
+const getNotifications = async () => Notification.find().populate("user");
 
 module.exports = {
   signup,

@@ -38,90 +38,67 @@ function Login() {
       const mutationResponse = await login({
         variables: { email: formState.email, password: formState.password },
       });
-
-      if (mutationResponse.errors) {
-        throw new Error(mutationResponse.errors[0].message);
-      }
-
-      console.log("Login response data:", mutationResponse.data);
       const token = mutationResponse.data.login.token;
-      AuthService.login(token, null); // Assuming you don't have refresh token yet
-      console.log("Token saved to localStorage:", token); // Log token
+      console.log("Login response data:", mutationResponse.data);
+
+      AuthService.login(token);
       dispatch(signInSuccess(mutationResponse.data.login.user));
       navigate("/");
-    } catch (e) {
-      console.error("Login error:", e);
-      dispatch(signInFailure(e.message));
+    } catch (error) {
+      console.error("Sign-in error:", error.message);
+      dispatch(signInFailure(error.message));
     }
   };
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormState({
-      ...formState,
-      [name]: value,
-    });
-  };
-
   return (
-    <div className="container my-1">
-      <h2>Login</h2>
+    <div className="login">
       <form onSubmit={handleFormSubmit}>
-        <div className="flex-row space-between my-2">
-          <Label htmlFor="email">Email address:</Label>
+        <h2 className="title">Login</h2>
+        <div className="input-group">
+          <Label htmlFor="email" className="label">
+            Email
+          </Label>
           <TextInput
-            placeholder="youremail@test.com"
-            name="email"
             type="email"
-            autoComplete="email"
+            name="email"
             id="email"
-            onChange={handleChange}
+            placeholder="Your Email"
             value={formState.email}
-            required
+            onChange={(e) =>
+              setFormState({ ...formState, email: e.target.value })
+            }
+            className="input"
           />
         </div>
-        <div className="flex-row space-between my-2">
-          <Label htmlFor="pwd">Password:</Label>
+        <div className="input-group">
+          <Label htmlFor="password" className="label">
+            Password
+          </Label>
           <TextInput
-            placeholder="******"
-            name="password"
             type="password"
-            autoComplete="current-password"
-            id="pwd"
-            onChange={handleChange}
+            name="password"
+            id="password"
+            placeholder="Your Password"
             value={formState.password}
-            required
+            onChange={(e) =>
+              setFormState({ ...formState, password: e.target.value })
+            }
+            className="input"
           />
         </div>
-        {mutationError ? (
-          <Alert color="failure">
-            Error signing in: {mutationError.message}
-          </Alert>
-        ) : null}
-        {errorMessage ? <Alert color="failure">{errorMessage}</Alert> : null}
-        <div className="flex-row flex-end">
-          <Button
-            gradientDuoTone="purpleToPink"
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Spinner size="sm" />
-                <span className="pl-3">Loading...</span>
-              </>
-            ) : (
-              "Sign In"
-            )}
-          </Button>
-          <OAuth />
-        </div>
+        {mutationError && (
+          <Alert color="failure">{mutationError.message}</Alert>
+        )}
+        {errorMessage && <Alert color="failure">{errorMessage}</Alert>}
+        <Button type="submit" disabled={loading}>
+          {loading ? <Spinner /> : "Login"}
+        </Button>
       </form>
-      <div className="flex gap-2 text-small mt-5">
-        <span>Don't Have An Account?</span>
-        <Link to="/signup" className="text-blue-500">
-          Sign Up
-        </Link>
+      <OAuth />
+      <div className="footer">
+        <p>
+          Don't have an account? <Link to="/signup">Sign up</Link>
+        </p>
       </div>
     </div>
   );
