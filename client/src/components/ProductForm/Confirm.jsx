@@ -5,13 +5,14 @@ import Button from "@mui/material/Button";
 
 const theme = createTheme();
 
-const Confirm = ({ values, nextStep, prevStep }) => {
+const Confirm = ({ values, nextStep, prevStep, handleSubmit }) => {
   const {
     name,
     description,
     price,
     quantity,
-    category,
+    categoryId,
+    image,
     startingPrice,
     startTime,
     endTime,
@@ -19,11 +20,14 @@ const Confirm = ({ values, nextStep, prevStep }) => {
 
   const continueStep = (e) => {
     e.preventDefault();
+    console.log("Confirm: Submitting form with values:", values);
+    handleSubmit(e);
     nextStep();
   };
 
   const backStep = (e) => {
     e.preventDefault();
+    console.log("Confirm: Going back to previous step");
     prevStep();
   };
 
@@ -45,7 +49,10 @@ const Confirm = ({ values, nextStep, prevStep }) => {
             <ListItemText primary="Quantity" secondary={quantity} />
           </ListItem>
           <ListItem>
-            <ListItemText primary="Category" secondary={category} />
+            <ListItemText primary="Category" secondary={categoryId} />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary="Image URL" secondary={image} />
           </ListItem>
           {startingPrice && (
             <>

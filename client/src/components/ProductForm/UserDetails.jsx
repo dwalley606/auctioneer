@@ -2,11 +2,12 @@ import React from "react";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import "./ProductForm.css"; // Create and use a separate CSS file if needed for custom styles
+import "./ProductForm.css";
 
 const UserDetails = ({ values, handleChange, nextStep }) => {
   const continueStep = (e) => {
     e.preventDefault();
+    console.log("UserDetails: Continuing to next step with values:", values);
     nextStep();
   };
 

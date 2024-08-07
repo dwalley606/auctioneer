@@ -1,18 +1,11 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import { useDropzone } from "react-dropzone";
-import {
-  getDownloadURL,
-  getStorage,
-  ref,
-  uploadBytesResumable,
-} from "firebase/storage";
-import { app } from "../../firebase/config";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCategories } from "../../redux/categories/categoriesSlice";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { uploadImage } from "../../utils/uploadImage";
 import "./ProductForm.css";
 
 const ProductDetails = ({
@@ -20,19 +13,16 @@ const ProductDetails = ({
   handleChange,
   nextStep,
   prevStep,
+  handleImageUpload,
   categories,
 }) => {
+  const [isDragging, setIsDragging] = useState(false);
   const dispatch = useDispatch();
   const {
     items: fetchedCategories,
     loading: categoriesLoading,
     error: categoriesError,
   } = useSelector((state) => state.categories);
-  const [imageFile, setImageFile] = useState(null);
-  const [imageFileUrl, setImageFileUrl] = useState(null);
-  const [imageFileUploadError, setImageFileUploadError] = useState(null);
-  const [imageFileUploading, setImageFileUploading] = useState(false);
-  const filePickerRef = useRef();
 
   useEffect(() => {
     if (!categories.length) {
@@ -40,63 +30,60 @@ const ProductDetails = ({
     }
   }, [dispatch, categories.length]);
 
-  const onDrop = (acceptedFiles) => {
-    const file = acceptedFiles[0];
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
     if (file) {
-      setImageFile(file);
-      setImageFileUrl(URL.createObjectURL(file));
-    }
-  };
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: "image/*",
-    maxFiles: 1,
-    maxSize: 2 * 1024 * 1024, // 2MB limit
-  });
-
-  useEffect(() => {
-    if (imageFile) {
-      uploadImage();
-    }
-  }, [imageFile]);
-
-  const uploadImage = async () => {
-    setImageFileUploading(true);
-    setImageFileUploadError(null);
-    const storage = getStorage(app);
-    const fileName = new Date().getTime() + imageFile.name;
-    const storageRef = ref(storage, fileName);
-    const uploadTask = uploadBytesResumable(storageRef, imageFile);
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {},
-      (error) => {
-        setImageFileUploadError(
-          "Could not upload image (File must be less than 2MB)"
-        );
-        setImageFile(null);
-        setImageFileUrl(null);
-        setImageFileUploading(false);
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          setImageFileUrl(downloadURL);
-          handleChange("image")({ target: { value: downloadURL } });
-          setImageFileUploading(false);
-        });
+      try {
+        const imageUrl = await uploadImage(file);
+        handleChange("image")({ target: { value: imageUrl } });
+        console.log("ProductDetails: Image uploaded successfully", imageUrl);
+      } catch (error) {
+        console.error("Error uploading image:", error);
       }
-    );
+    }
   };
 
-  const continueStep = (e) => {
+  const handleDragOver = (e) => {
     e.preventDefault();
-    nextStep();
+    setIsDragging(true);
   };
 
-  const backStep = (e) => {
+  const handleDragLeave = (e) => {
     e.preventDefault();
-    prevStep();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      try {
+        const imageUrl = await uploadImage(file);
+        handleChange("image")({ target: { value: imageUrl } });
+        console.log("ProductDetails: Image uploaded successfully", imageUrl);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      }
+    }
+  };
+
+  const isFormValid = () => {
+    const requiredFields = [
+      "name",
+      "description",
+      "price",
+      "quantity",
+      "categoryId",
+      "image",
+    ];
+    const missingFields = requiredFields.filter((field) => !values[field]);
+
+    if (missingFields.length > 0) {
+      console.log("Missing fields:", missingFields);
+      return false;
+    }
+    return true;
   };
 
   return (
@@ -115,14 +102,13 @@ const ProductDetails = ({
         <TextField
           label="Description"
           name="description"
-          placeholder="Enter Description"
+          placeholder="Enter Product Description"
           onChange={handleChange("description")}
           defaultValue={values.description}
           margin="normal"
           fullWidth
+          multiline
         />
-      </Box>
-      <Box className="form-section">
         <TextField
           label="Price"
           name="price"
@@ -130,6 +116,7 @@ const ProductDetails = ({
           onChange={handleChange("price")}
           defaultValue={values.price}
           margin="normal"
+          type="number"
           fullWidth
         />
         <TextField
@@ -139,76 +126,58 @@ const ProductDetails = ({
           onChange={handleChange("quantity")}
           defaultValue={values.quantity}
           margin="normal"
+          type="number"
           fullWidth
         />
-      </Box>
-      <Box className="box-form-section">
         <TextField
-          label="Category"
-          name="category"
           select
-          value={values.category}
-          onChange={handleChange("category")}
+          label="Category"
+          name="categoryId"
+          value={values.categoryId}
+          onChange={handleChange("categoryId")}
           SelectProps={{
             native: true,
           }}
+          helperText="Please select a category"
           margin="normal"
           fullWidth
         >
           <option value=""></option>
-          {categoriesLoading && <option>Loading...</option>}
-          {categoriesError && <option>Error loading categories</option>}
-          {Array.isArray(fetchedCategories) &&
-            fetchedCategories.length > 0 &&
-            fetchedCategories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
+          {fetchedCategories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
         </TextField>
-      </Box>
-      <Box className="form-section">
-        <div
-          {...getRootProps()}
-          className={`dropzone ${isDragActive ? "active" : ""}`}
-          style={{
-            height: "300px",
-            border: "2px dotted gray",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-            padding: "20px",
-            cursor: "pointer",
-          }}
+        <Box
+          className={`dropzone ${isDragging ? "dragging" : ""}`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
-          <input {...getInputProps()} />
-          {!imageFile && (
-            <div>
-              <CloudUploadIcon style={{ fontSize: 50, color: "gray" }} />
-              <p>Drag 'n' drop files here to upload</p>
-            </div>
-          )}
-          {imageFile && (
-            <div className="image-preview-container">
-              <img
-                src={imageFileUrl || "/placeholder-image.jpg"}
-                alt="product"
-                className={`rounded-full w-full h-full object-cover border-8 border-[lightgray]`}
-              />
-              {imageFileUploadError && (
-                <Box className="alert alert-danger">{imageFileUploadError}</Box>
-              )}
-            </div>
-          )}
-        </div>
-      </Box>
-      <Box className="form-actions">
-        <Button color="secondary" variant="contained" onClick={backStep}>
-          Back
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="file-input"
+          />
+          <CloudUploadIcon />
+          <p>Drag and drop an image or click to upload</p>
+        </Box>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={nextStep}
+          disabled={!isFormValid()}
+        >
+          Next
         </Button>
-        <Button color="primary" variant="contained" onClick={continueStep}>
-          Continue
+        <Button
+          variant="contained"
+          onClick={prevStep}
+          style={{ marginLeft: "10px" }}
+        >
+          Back
         </Button>
       </Box>
     </Box>

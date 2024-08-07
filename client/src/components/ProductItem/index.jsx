@@ -4,6 +4,11 @@ import { Link, useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { addToCart, selectCartItems } from "../../redux/cart/cartSlice";
+import {
+  startAuction,
+  placeBid,
+  selectAuctions,
+} from "../../redux/auction/auctionSlice";
 import { pluralize } from "../../utils/helpers";
 import {
   useGetProductDetails,
@@ -20,15 +25,10 @@ const ProductItem = () => {
   const { product, loading, error, refetch } = useGetProductDetails(id);
   const [currentProduct, setCurrentProduct] = useState(null);
 
-  useEffect(() => {
-    if (product) {
-      setCurrentProduct(product);
-      console.log("Product data set:", product);
-    }
-  }, [product]);
-
   const dispatch = useDispatch();
   const cart = useSelector(selectCartItems);
+  const auctions = useSelector(selectAuctions);
+
   const [bidAmount, setBidAmount] = useState(0);
   const [highestBid, setHighestBid] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -38,14 +38,23 @@ const ProductItem = () => {
   const [placeBid] = usePlaceBid();
 
   useEffect(() => {
-    console.log("Starting auction polling");
-    startPolling(1000);
+    if (product) {
+      setCurrentProduct(product);
+      console.log("Product data set:", product);
+    }
+  }, [product]);
 
-    return () => {
-      console.log("Stopping auction polling");
-      stopPolling();
-    };
-  }, [startPolling, stopPolling]);
+  useEffect(() => {
+    if (auctionActive) {
+      console.log("Starting auction polling");
+      startPolling(1000);
+
+      return () => {
+        console.log("Stopping auction polling");
+        stopPolling();
+      };
+    }
+  }, [auctionActive, startPolling, stopPolling]);
 
   useEffect(() => {
     if (auctionsData) {
@@ -66,9 +75,40 @@ const ProductItem = () => {
     }
   }, [auctionsData, id]);
 
-  // Setup Socket.IO client
   useEffect(() => {
-    socket.on("bidChange", async (change) => {
+    if (timeLeft > 0 && auctionActive) {
+      const timer = setInterval(() => {
+        setTimeLeft((prevTime) => prevTime - 1);
+      }, 1000);
+
+      return () => clearInterval(timer);
+    } else if (timeLeft <= 0 && auctionActive) {
+      console.log("Auction ended");
+      setAuctionActive(false);
+      const auction = auctionsData.auctions.find((a) => a.product.id === id);
+      if (auction) {
+        const highestBid = auction.bids.reduce(
+          (max, bid) => (bid.amount > max.amount ? bid : max),
+          { amount: 0 }
+        );
+        console.log("Highest bid:", highestBid);
+        toast.success(
+          `Auction ended. Highest bid: $${highestBid.amount} by ${highestBid.user.username}`,
+          {
+            position: "top-center",
+            autoClose: 2000,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "colored",
+          }
+        );
+      }
+    }
+  }, [timeLeft, auctionActive, auctionsData, id]);
+
+  useEffect(() => {
+    const handleBidChange = async (change) => {
       console.log("Bid change detected:", change);
       if (change.documentKey._id.toString() === id) {
         console.log("Matching product ID, refetching data...");
@@ -80,10 +120,12 @@ const ProductItem = () => {
           console.error("Error during refetch:", err);
         }
       }
-    });
+    };
+
+    socket.on("bidChange", handleBidChange);
 
     return () => {
-      socket.off("bidChange");
+      socket.off("bidChange", handleBidChange);
     };
   }, [id, refetch]);
 
@@ -103,15 +145,11 @@ const ProductItem = () => {
   const notifyAddedToCart = (item) => {
     toast.success(`${item.name} added to cart!`, {
       position: "top-center",
-      autoClose: 0,
+      autoClose: 2000,
       closeOnClick: true,
       pauseOnHover: true,
       draggable: true,
       theme: "colored",
-      style: {
-        backgroundColor: "#fff",
-        color: "#000",
-      },
     });
   };
 
@@ -139,25 +177,17 @@ const ProductItem = () => {
           pauseOnHover: true,
           draggable: true,
           theme: "colored",
-          style: {
-            backgroundColor: "#fff",
-            color: "#000",
-          },
         });
+        dispatch(placeBid({ productId: id, bidAmount }));
       } catch (error) {
         console.error("Error placing bid:", error);
         toast.error(`Error placing bid: ${error.message}`, {
           position: "top-center",
           autoClose: 2000,
-          hideProgressBar: true,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
           theme: "colored",
-          style: {
-            backgroundColor: "#000",
-            color: "#fff",
-          },
         });
       }
     } else {
@@ -165,17 +195,32 @@ const ProductItem = () => {
       toast.error(`Bid must be higher than $${highestBid}`, {
         position: "top-center",
         autoClose: 2000,
-        hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
         theme: "colored",
-        style: {
-          backgroundColor: "#000",
-          color: "#fff",
-        },
       });
     }
+  };
+
+  const startAuctionHandler = (startingPrice, duration) => {
+    console.log(
+      "Starting auction with price:",
+      startingPrice,
+      "and duration:",
+      duration
+    );
+    setHighestBid(startingPrice);
+    setTimeLeft(duration);
+    setAuctionActive(true);
+    const auction = {
+      productId: id,
+      startingPrice,
+      endTime: new Date(Date.now() + duration * 1000).toISOString(),
+      bids: [],
+      status: "active",
+    };
+    dispatch(startAuction(auction));
   };
 
   if (loading) return <div>Loading...</div>;
@@ -251,7 +296,7 @@ const ProductItem = () => {
                 value={timeLeft}
                 onChange={(e) => setTimeLeft(parseInt(e.target.value) || 0)}
               />
-              <button onClick={() => startAuction(bidAmount, timeLeft)}>
+              <button onClick={() => startAuctionHandler(bidAmount, timeLeft)}>
                 Start Auction
               </button>
             </div>

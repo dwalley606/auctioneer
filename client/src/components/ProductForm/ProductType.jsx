@@ -7,11 +7,13 @@ const theme = createTheme();
 
 const ProductType = ({ nextStep, setIsAuction }) => {
   const handleForSale = () => {
+    console.log("ProductType: Selected For Sale");
     setIsAuction(false);
     nextStep();
   };
 
   const handleForAuction = () => {
+    console.log("ProductType: Selected For Auction");
     setIsAuction(true);
     nextStep();
   };
