@@ -22,6 +22,12 @@ const isValidImageType = (file) => {
 
 const uploadImage = (file) => {
   return new Promise((resolve, reject) => {
+    if (typeof file === "string") {
+      // If the file is already a URL, skip validation
+      resolve(file);
+      return;
+    }
+
     if (!isValidImageType(file)) {
       reject(
         "Invalid file type. Please upload an image file (jpg, jpeg, png, gif)."
@@ -29,7 +35,6 @@ const uploadImage = (file) => {
       return;
     }
 
-    // Check if file size is less than 2MB
     if (file.size > 2 * 1024 * 1024) {
       reject("File must be less than 2MB.");
       return;

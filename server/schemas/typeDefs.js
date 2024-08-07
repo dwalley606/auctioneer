@@ -21,6 +21,14 @@ const typeDefs = gql`
     user: User!
   }
 
+  input UpdateUserProfileInput {
+    username: String
+    email: String
+    photoUrl: String
+    password: String
+    profilePicture: String
+  }
+
   input GoogleSignInInput {
     idToken: String!
     email: String!
@@ -132,7 +140,6 @@ const typeDefs = gql`
       quantity: Int!
       categoryId: ID!
       image: String!
-      userId: ID!
     ): Product
     createCategory(name: String!): Category
     placeBid(productId: ID!, amount: Float!): Bid
@@ -152,6 +159,7 @@ const typeDefs = gql`
       startingPrice: Float!
       status: String!
     ): Auction
+    updateUserProfile(input: UpdateUserProfileInput!): User
   }
 `;
 

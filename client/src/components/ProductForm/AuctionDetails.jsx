@@ -8,11 +8,13 @@ const theme = createTheme();
 const AuctionDetails = ({ values, handleChange, nextStep, prevStep }) => {
   const continueStep = (e) => {
     e.preventDefault();
+    console.log("Continuing to next step with values:", values);
     nextStep();
   };
 
   const backStep = (e) => {
     e.preventDefault();
+    console.log("Going back to previous step");
     prevStep();
   };
 

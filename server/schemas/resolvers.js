@@ -10,47 +10,26 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      console.log("Fetching users for authenticated user:", context.user);
       return actions.getUsers();
     },
-    products: async () => {
-      console.log("Fetching all products...");
-      return actions.getProducts();
-    },
-    categories: async () => {
-      console.log("Fetching all categories...");
-      return actions.getCategories();
-    },
-    category: async (_, { id }) => {
-      console.log("Fetching category with ID:", id);
-      return actions.getCategoryById(id);
-    },
+    products: async () => actions.getProducts(),
+    categories: async () => actions.getCategories(),
+    category: async (_, { id }) => actions.getCategoryById(id),
     orders: async (_, __, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      console.log("Fetching orders for authenticated user:", context.user);
       return actions.getOrders();
     },
-    feedbacks: async () => {
-      console.log("Fetching all feedbacks...");
-      return actions.getFeedbacks();
-    },
-    auctions: async () => {
-      console.log("Fetching all auctions...");
-      return Auction.find().populate("product");
-    },
-    bids: async () => {
-      console.log("Fetching all bids...");
-      return actions.getBids();
-    },
+    feedbacks: async () => actions.getFeedbacks(),
+    auctions: async () => Auction.find().populate("product"),
+    bids: async () => actions.getBids(),
     payments: async (_, __, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      console.log("Fetching payments for authenticated user:", context.user);
       return actions.getPayments();
     },
     notifications: async (_, __, context) => {
@@ -58,41 +37,22 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      console.log(
-        "Fetching notifications for authenticated user:",
-        context.user
-      );
       return actions.getNotifications();
     },
     product: async (_, { id }) => {
-      try {
-        console.log("Fetching product with ID:", id);
-        const product = await Product.findById(id)
-          .populate("category")
-          .populate("seller")
-          .populate({
-            path: "auction",
-            populate: {
-              path: "bids",
-            },
-          });
+      const product = await Product.findById(id)
+        .populate("category")
+        .populate("seller")
+        .populate({
+          path: "auction",
+          populate: {
+            path: "bids",
+          },
+        });
 
-        if (!product) {
-          console.log("Product not found");
-          throw new Error("Product not found");
-        }
-
-        // Ensure auction field is null if no auction exists
-        if (!product.auction) {
-          product.auction = null;
-        }
-
-        console.log("Product found:", product);
-        return product;
-      } catch (error) {
-        console.error("Error fetching product:", error);
-        throw new Error("Error fetching product");
-      }
+      if (!product) throw new Error("Product not found");
+      if (!product.auction) product.auction = null;
+      return product;
     },
   },
   Mutation: {
@@ -109,16 +69,6 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-
-      console.log("Received createProduct input:", {
-        name,
-        description,
-        quantity,
-        price,
-        categoryId,
-        image,
-      });
-
       return actions.createProduct(
         name,
         description,
@@ -196,6 +146,23 @@ const resolvers = {
           "You must be logged in to perform this action"
         );
       return actions.createNotification(userId, message);
+    },
+    updateUserProfile: async (_, { input }, context) => {
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
+      const user = await User.findById(context.user.id);
+      if (!user) throw new Error("User not found");
+
+      if (input.username) user.username = input.username;
+      if (input.email) user.email = input.email;
+      if (input.photoUrl) user.photoUrl = input.photoUrl;
+      if (input.profilePicture) user.photoUrl = input.profilePicture;
+      if (input.password) user.password = input.password;
+
+      await user.save();
+      return user;
     },
   },
   Category: {

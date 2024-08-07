@@ -100,3 +100,14 @@ export const GOOGLE_SIGN_IN = gql`
     }
   }
 `;
+
+export const UPDATE_USER_PROFILE = gql`
+  mutation UpdateUserProfile($input: UpdateUserProfileInput!) {
+    updateUserProfile(input: $input) {
+      id
+      username
+      email
+      photoUrl
+    }
+  }
+`;

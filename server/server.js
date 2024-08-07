@@ -8,6 +8,7 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
+const { graphqlUploadExpress } = require("graphql-upload");
 
 const { typeDefs, resolvers } = require("./schemas");
 const db = require("./config/connection");
@@ -22,10 +23,7 @@ const app = express();
 const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
-  formatError: (error) => {
-    console.error("GraphQL Error:", error);
-    return error;
-  },
+  csrfPrevention: true,
 });
 
 const httpServer = http.createServer(app);
@@ -47,6 +45,7 @@ io.on("connection", (socket) => {
 const startApolloServer = async () => {
   try {
     await apolloServer.start();
+
     app.use(
       cors({
         origin: ["http://localhost:3000", "https://localhost:3000"],
@@ -55,24 +54,27 @@ const startApolloServer = async () => {
     );
 
     app.use(express.json());
-    console.log("Express JSON middleware added");
     app.use(cookieParser());
-    console.log("Cookie parser middleware added");
 
     app.use(
       "/images",
       express.static(path.join(__dirname, "../client/images"))
     );
+
+    app.use(graphqlUploadExpress());
+
+    app.use("/graphql", authMiddleware); // Use auth middleware only for GraphQL
+
     app.use(
       "/graphql",
       expressMiddleware(apolloServer, {
         context: ({ req }) => {
-          const context = authMiddleware({ req });
-          console.log("Request context:", context.user); // Debugging line
-          return context;
+          console.log("GraphQL request context user:", req.user);
+          return { user: req.user };
         },
       })
     );
+
     app.post("/graphql/auth/google", async (req, res) => {
       try {
         const { token } = req.body;
@@ -82,10 +84,11 @@ const startApolloServer = async () => {
         const result = await validateFirebaseToken(token);
         return res.json(result);
       } catch (error) {
-        console.error("Google auth error:", error);
+        console.error("Google auth error: ", error);
         return res.status(400).json({ error: error.message });
       }
     });
+
     app.post("/user/signout", async (req, res) => {
       try {
         await signout(req, res);
@@ -95,26 +98,28 @@ const startApolloServer = async () => {
         }
       }
     });
+
     if (process.env.NODE_ENV === "production") {
       app.use(express.static(path.join(__dirname, "../client/dist")));
       app.get("*", (req, res) => {
         res.sendFile(path.join(__dirname, "../client/dist/index.html"));
       });
     }
+
     db.once("open", () => {
       httpServer.listen(PORT, () => {
         console.log(`API server running on port ${PORT}!`);
         console.log(`Use GraphQL at http://localhost:${PORT}/graphql`);
       });
       watchCollection(io).catch((err) =>
-        console.error("Failed to watch collection:", err)
+        console.error("Failed to watch collection: ", err)
       );
     });
   } catch (error) {
-    console.error("Failed to start Apollo server:", error);
+    console.error("Failed to start Apollo server: ", error);
   }
 };
 
 startApolloServer().catch((error) => {
-  console.error("Failed to start server:", error);
+  console.error("Failed to start server: ", error);
 });

@@ -21,8 +21,20 @@ async function watchCollection(io) {
         io.engine.clientsCount
       );
     });
+
+    changeStream.on("error", (err) => {
+      console.error("Error in change stream:", err);
+      setTimeout(() => {
+        console.log("Reconnecting to change stream...");
+        watchCollection(io);
+      }, 5000); // Retry after 5 seconds
+    });
   } catch (err) {
-    console.error("Error in change stream:", err);
+    console.error("Error connecting to MongoDB:", err);
+    setTimeout(() => {
+      console.log("Retrying MongoDB connection...");
+      watchCollection(io);
+    }, 5000); // Retry after 5 seconds
   } finally {
     process.on("exit", () => {
       client.close();
