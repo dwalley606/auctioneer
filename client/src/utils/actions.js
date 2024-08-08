@@ -13,6 +13,7 @@ import {
   PLACE_BID,
   CREATE_ORDER,
   GOOGLE_SIGN_IN,
+  UPDATE_USER_PROFILE,
 } from "./mutations";
 import { getAuthHeaders } from "./auth";
 
@@ -57,6 +58,9 @@ export const useGetProductDetails = (id) => {
 
 export const useGetUserProfile = () => {
   return useQuery(GET_USER_PROFILE, {
+    context: {
+      headers: getAuthHeaders(),
+    },
     onCompleted: (data) => console.log("Fetched user profile:", data),
     onError: (error) => console.error("Error fetching user profile:", error),
   });
@@ -83,6 +87,9 @@ export const useGetCategories = () => {
 
 export const useLoginUser = () => {
   return useMutation(LOGIN_USER, {
+    context: {
+      headers: getAuthHeaders(),
+    },
     onCompleted: (data) => console.log("User logged in:", data),
     onError: (error) => console.error("Error logging in user:", error),
   });
@@ -90,6 +97,9 @@ export const useLoginUser = () => {
 
 export const useSignupUser = () => {
   return useMutation(SIGNUP_USER, {
+    context: {
+      headers: getAuthHeaders(),
+    },
     onCompleted: (data) => console.log("User signed up:", data),
     onError: (error) => console.error("Error signing up user:", error),
   });
@@ -97,6 +107,9 @@ export const useSignupUser = () => {
 
 export const useCreateProduct = () => {
   return useMutation(CREATE_PRODUCT, {
+    context: {
+      headers: getAuthHeaders(),
+    },
     onCompleted: (data) => console.log("Product created:", data),
     onError: (error) => console.error("Error creating product:", error),
   });
@@ -107,12 +120,16 @@ export const usePlaceBid = () => {
     context: {
       headers: getAuthHeaders(),
     },
+    onCompleted: (data) => console.log("Bid placed:", data),
+    onError: (error) => console.error("Error placing bid:", error),
   });
 };
 
-
 export const useCreateOrder = () => {
   return useMutation(CREATE_ORDER, {
+    context: {
+      headers: getAuthHeaders(),
+    },
     onCompleted: (data) => console.log("Order created:", data),
     onError: (error) => console.error("Error creating order:", error),
   });
@@ -120,7 +137,20 @@ export const useCreateOrder = () => {
 
 export const useGoogleSignIn = () => {
   return useMutation(GOOGLE_SIGN_IN, {
+    context: {
+      headers: getAuthHeaders(),
+    },
     onCompleted: (data) => console.log("Google sign-in successful:", data),
     onError: (error) => console.error("Error with Google sign-in:", error),
+  });
+};
+
+export const useUpdateUserProfile = () => {
+  return useMutation(UPDATE_USER_PROFILE, {
+    context: {
+      headers: getAuthHeaders(),
+    },
+    onCompleted: (data) => console.log("User profile updated:", data),
+    onError: (error) => console.error("Error updating user profile:", error),
   });
 };

@@ -1,6 +1,8 @@
 const { gql } = require("apollo-server-express");
 
 const typeDefs = gql`
+  scalar Upload
+
   type User {
     id: ID!
     username: String!
@@ -19,12 +21,31 @@ const typeDefs = gql`
     user: User!
   }
 
+  input UpdateUserProfileInput {
+    username: String
+    email: String
+    photoUrl: String
+    password: String
+    profilePicture: String
+  }
+
   input GoogleSignInInput {
     idToken: String!
     email: String!
     username: String!
     photoUrl: String
     googleId: String!
+  }
+
+  input CreateProductInput {
+    name: String!
+    description: String!
+    quantity: Int!
+    price: Float!
+    categoryId: ID!
+    subcategoryId: ID!
+    image: String!
+    sellerId: ID!
   }
 
   type Product {
@@ -35,6 +56,7 @@ const typeDefs = gql`
     quantity: Int!
     price: Float!
     category: Category!
+    subcategory: Subcategory
     seller: User!
     bids: [Bid]
     feedbacks: [Feedback]
@@ -45,7 +67,6 @@ const typeDefs = gql`
     id: ID!
     name: String!
     subcategories: [Subcategory]
-    products: [Product]
   }
 
   type Subcategory {
@@ -122,25 +143,10 @@ const typeDefs = gql`
     signup(username: String!, email: String!, password: String!): AuthPayload
     login(email: String!, password: String!): AuthPayload
     googleSignIn(input: GoogleSignInInput!): AuthPayload
-    createUser(username: String!, email: String!, password: String!): User
-    createProduct(
-      name: String!
-      description: String!
-      quantity: Int!
-      price: Float!
-      categoryId: ID!
-    ): Product
+    createProduct(input: CreateProductInput!): Product
     createCategory(name: String!): Category
-    placeBid(productId: ID!, amount: Float!): Bid
     createOrder(productId: ID!, amount: Float!): Order
     createFeedback(productId: ID!, rating: Int!, comment: String!): Feedback
-    createPayment(
-      orderId: ID!
-      method: String!
-      status: String!
-      transactionId: String!
-    ): Payment
-    createNotification(userId: ID!, message: String!): Notification
     createAuction(
       productId: ID!
       startTime: String!
@@ -148,6 +154,15 @@ const typeDefs = gql`
       startingPrice: Float!
       status: String!
     ): Auction
+    placeBid(productId: ID!, amount: Float!): Bid
+    createPayment(
+      orderId: ID!
+      method: String!
+      status: String!
+      transactionId: String!
+    ): Payment
+    createNotification(userId: ID!, message: String!): Notification
+    updateUserProfile(input: UpdateUserProfileInput!): User
   }
 `;
 
