@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { createProduct } from "../redux/products/productsSlice";
+import { startAuction } from "../redux/auction/auctionSlice";
 import ProductType from "../components/ProductForm/ProductType";
 import UserDetails from "../components/ProductForm/UserDetails";
 import ProductDetails from "../components/ProductForm/ProductDetails";
@@ -87,9 +88,9 @@ const Posting = () => {
   const nextStep = () => setStep((prevStep) => prevStep + 1);
   const prevStep = () => setStep((prevStep) => prevStep - 1);
 
-   const handleNext = () => nextStep();
-   const handleBack = () => prevStep();
-   const handleStep = (step) => () => setStep(step);
+  const handleNext = () => nextStep();
+  const handleBack = () => prevStep();
+  const handleStep = (step) => () => setStep(step);
 
   const values = { ...formData, ...auctionData };
 
@@ -129,52 +130,56 @@ const Posting = () => {
 
   const handleReset = () => setStep(0);
 
- const handleSubmit = async (
-   e,
-   formData,
-   auctionData,
-   isAuction,
-   currentUser
- ) => {
-   e.preventDefault();
-   const errors = validateForm(formData, auctionData, isAuction);
-   if (Object.keys(errors).length > 0) {
-     setFormErrors(errors);
-     console.log("Posting: Form validation errors", errors);
-     return;
-   }
+  const handleSubmit = async (
+    e,
+    formData,
+    auctionData,
+    isAuction,
+    currentUser
+  ) => {
+    e.preventDefault();
+    const errors = validateForm(formData, auctionData, isAuction);
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      console.log("Posting: Form validation errors", errors);
+      return;
+    }
 
-   try {
-     const imageUrl = await uploadImage(formData.image);
-     const productData = {
-       name: formData.name,
-       description: formData.description,
-       price: parseFloat(formData.price),
-       quantity: parseInt(formData.quantity, 10),
-       categoryId: formData.categoryId,
-       subcategoryId: formData.subcategoryId,
-       image: imageUrl,
-       sellerId: currentUser.id.toString(),
-     };
+    try {
+      const imageUrl = await uploadImage(formData.image);
+      const productData = {
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        quantity: parseInt(formData.quantity, 10),
+        categoryId: formData.categoryId,
+        subcategoryId: formData.subcategoryId,
+        image: imageUrl,
+        sellerId: currentUser.id.toString(),
+      };
 
-     if (isAuction) {
-       productData.startingPrice = parseFloat(auctionData.startingPrice);
-       productData.startTime = auctionData.startTime;
-       productData.endTime = auctionData.endTime;
-     }
+      const result = await dispatch(createProduct(productData)).unwrap();
+      console.log("Product created successfully", result);
 
-     console.log("Form Data to be sent:", productData);
+      if (isAuction) {
+        const auctionDataToSend = {
+          product: result.id,
+          startTime: auctionData.startTime,
+          endTime: auctionData.endTime,
+          startingPrice: parseFloat(auctionData.startingPrice),
+          status: "active",
+        };
 
-     const result = await dispatch(createProduct(productData)).unwrap();
-     console.log("Product created successfully", result);
-     nextStep();
-   } catch (error) {
-     console.error("Error creating product:", error);
-     console.error("Full error object:", JSON.stringify(error, null, 2));
-     setFormErrors({ submit: error.message || "Failed to create product" });
-   }
- };
-
+        dispatch(startAuction(auctionDataToSend));
+        console.log("Auction created successfully");
+      }
+      nextStep();
+    } catch (error) {
+      console.error("Error creating product:", error);
+      console.error("Full error object:", JSON.stringify(error, null, 2));
+      setFormErrors({ submit: error.message || "Failed to create product" });
+    }
+  };
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -225,7 +230,15 @@ const Posting = () => {
                 categories={categories}
               />
             )}
-            {step === 3 && (
+            {step === 3 && isAuction && (
+              <AuctionDetails
+                nextStep={nextStep}
+                prevStep={prevStep}
+                values={auctionData}
+                handleChange={handleAuctionChange}
+              />
+            )}
+            {step === (isAuction ? 4 : 3) && (
               <Confirm
                 nextStep={nextStep}
                 prevStep={prevStep}
@@ -236,7 +249,13 @@ const Posting = () => {
                 currentUser={currentUser}
               />
             )}
-            {step === 4 && <Success values={values} />}
+            {step === (isAuction ? 5 : 4) && (
+              <Success
+                values={values}
+                auctionData={auctionData}
+                isAuction={isAuction}
+              />
+            )}
             <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
               {step > 0 && (
                 <Button

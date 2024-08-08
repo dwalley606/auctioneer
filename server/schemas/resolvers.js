@@ -229,30 +229,57 @@ const resolvers = {
       );
     },
     createAuction: async (
-      _,
-      { productId, startTime, endTime, startingPrice, status },
-      context
-    ) => {
-      if (!context.user)
-        throw new AuthenticationError(
-          "You must be logged in to perform this action"
-        );
-      const auction = await actions.createAuction(
-        productId,
-        startTime,
-        endTime,
-        startingPrice,
-        status
-      );
+  _,
+  { productId, startTime, endTime, startingPrice, status },
+  context
+) => {
+  if (!context.user) {
+    throw new AuthenticationError(
+      "You must be logged in to perform this action"
+    );
+  }
 
-      // Convert ObjectId fields to string
-      auction.id = auction._id.toString();
-      auction.product = auction.product.toString();
-      auction.startTime = auction.startTime.toISOString();
-      auction.endTime = auction.endTime.toISOString();
+  try {
+    console.log("Received startTime:", startTime);
+    console.log("Received endTime:", endTime);
 
-      return auction;
-    },
+    // Ensure startTime and endTime are Date objects
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new UserInputError("Invalid date format for startTime or endTime");
+    }
+
+    console.log("Converted startTime to Date:", start);
+    console.log("Converted endTime to Date:", end);
+
+    const auction = await actions.createAuction(
+      productId,
+      start,
+      end,
+      startingPrice,
+      status
+    );
+
+    // Convert ObjectId fields to string and ensure dates are in ISO format
+    return {
+      ...auction.toObject(), // Convert Mongoose document to plain object
+      id: auction._id.toString(),
+      product: auction.product.toString(),
+      startTime: auction.startTime.toISOString(),
+      endTime: auction.endTime.toISOString(),
+    };
+  } catch (error) {
+    console.error("Error in createAuction resolver:", error);
+    throw new ApolloError(
+      "Failed to create auction",
+      "AUCTION_CREATION_ERROR",
+      { error }
+    );
+  }
+},
+
     placeBid: async (_, { productId, amount }, context) => {
       if (!context.user)
         throw new AuthenticationError(

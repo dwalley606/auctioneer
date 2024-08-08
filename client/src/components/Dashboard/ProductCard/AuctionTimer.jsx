@@ -5,10 +5,12 @@ import PropTypes from "prop-types";
 
 const AuctionTimer = ({ date }) => {
   const [expired, setExpired] = useState(false);
-  const { seconds, minutes, hours, days } = useTimer({
-    expiryTimestamp: dayjs(date).toDate(),
-    onExpire: () => setExpired(true),
-  });
+  const expiryDate = dayjs(date).toDate();
+
+   const { seconds, minutes, hours, days } = useTimer({
+     expiryTimestamp: expiryDate,
+     onExpire: () => setExpired(true),
+   });
 
   if (expired) {
     return `Expired on ${dayjs(date).format("DD MMM YYYY HH:mm:ss")}`;
@@ -28,7 +30,8 @@ const AuctionTimer = ({ date }) => {
 };
 
 AuctionTimer.propTypes = {
-  date: PropTypes.string.isRequired,
+  date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)])
+    .isRequired,
 };
 
 export default AuctionTimer;

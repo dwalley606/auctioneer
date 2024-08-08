@@ -32,23 +32,16 @@ const ProductItem = () => {
   useEffect(() => {
     if (product) {
       setCurrentProduct(product);
-    }
-  }, [product]);
-
-  useEffect(() => {
-    if (auctionsData) {
-      const auction = auctionsData.auctions.find(
-        (a) => a.product && a.product.id === id
-      );
-      if (auction) {
-        setHighestBid(auction.bids[0]?.amount || auction.startingPrice);
-        setTimeLeft(
-          Math.floor((new Date(auction.endTime).getTime() - Date.now()) / 1000)
-        );
-        setAuctionActive(auction.status === "active");
+      // Check if the product has an active auction
+      if (product.auction && product.auction.status === "active") {
+        const auction = product.auction;
+        setHighestBid(auction.bids?.[0]?.amount || auction.startingPrice);
+        const endTime = new Date(parseInt(auction.endTime, 10));
+        setTimeLeft(Math.floor((endTime.getTime() - Date.now()) / 1000));
+        setAuctionActive(true);
       }
     }
-  }, [auctionsData, id]);
+  }, [product]);
 
   useEffect(() => {
     if (timeLeft > 0 && auctionActive) {
@@ -58,32 +51,20 @@ const ProductItem = () => {
       return () => clearInterval(timer);
     } else if (timeLeft <= 0 && auctionActive) {
       setAuctionActive(false);
-      const auction = auctionsData.auctions.find((a) => a.product.id === id);
-      if (auction) {
-        const highestBid = auction.bids.reduce(
-          (max, bid) => (bid.amount > max.amount ? bid : max),
-          { amount: 0 }
-        );
-        toast.success(
-          `Auction ended. Highest bid: $${highestBid.amount} by ${
-            highestBid.user?.username || "unknown user"
-          }`,
-          {
-            position: "top-center",
-            autoClose: 2000,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "colored",
-          }
-        );
-      }
+      toast.info("Auction has ended.", {
+        position: "top-center",
+        autoClose: 2000,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
     }
-  }, [timeLeft, auctionActive, auctionsData, id]);
+  }, [timeLeft, auctionActive]);
 
   useEffect(() => {
     const handleBidChange = async (change) => {
-      if (change.documentKey._id.toString() === id) {
+      if (change.fullDocument?.product === id) {
         try {
           const { data } = await refetch();
           setCurrentProduct(data.product);
@@ -131,7 +112,7 @@ const ProductItem = () => {
     }
     if (bidAmount > highestBid) {
       try {
-        const result = await placeBid({
+        await placeBid({
           variables: { productId: id, amount: bidAmount },
         });
         setHighestBid(bidAmount);
@@ -201,7 +182,7 @@ const ProductItem = () => {
           <button className="product-detail-button" onClick={addToCartHandler}>
             Add to cart
           </button>
-          {auctionActive && (
+          {auctionActive ? (
             <div>
               <h2>Current Highest Bid: ${highestBid}</h2>
               <h2>
@@ -213,6 +194,10 @@ const ProductItem = () => {
                 onChange={(e) => setBidAmount(parseFloat(e.target.value))}
               />
               <button onClick={placeBidHandler}>Place Bid</button>
+            </div>
+          ) : (
+            <div>
+              <h2>No active auction for this product</h2>
             </div>
           )}
         </div>

@@ -330,47 +330,29 @@ const createFeedback = async (
   return feedback;
 };
 
-const createAuction = async (
-  productId,
-  startTime,
-  endTime,
-  startingPrice,
-  status
-) => {
+const createAuction = async (productId, startTime, endTime, startingPrice, status) => {
   try {
-    console.log("Received startTime:", startTime);
-    console.log("Received endTime:", endTime);
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new Error("Product not found");
+    }
 
     const auction = new Auction({
-      product: new mongoose.Types.ObjectId(productId),
-      startTime: new Date(startTime),
-      endTime: new Date(endTime),
+      product: productId,
+      startTime,
+      endTime,
       startingPrice,
       status,
     });
 
     await auction.save();
-
-    const product = await Product.findById(productId);
-    if (product) {
-      product.auction = auction._id;
-      await product.save();
-    }
-
-    console.log("Auction created:", auction);
-
-    return {
-      ...auction._doc,
-      id: auction._id.toString(),
-      product: auction.product.toString(),
-      startTime: auction.startTime.toISOString(),
-      endTime: auction.endTime.toISOString(),
-    };
+    return auction;
   } catch (error) {
-    console.error("Error in createAuction:", error);
-    throw new ApolloError("Failed to create auction");
+    console.error("Error in createAuction action:", error);
+    throw error;
   }
 };
+
 
 
 const placeBid = async (userId, productId, amount) => {

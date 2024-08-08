@@ -1,15 +1,11 @@
 const mongoose = require("mongoose");
-const mongoURI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/mern-shopping";
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => {
-    console.log("Mongoose connected to MongoDB");
-  })
-  .catch((err) => {
-    console.error("Mongoose connection error:", err);
-  });
+
+mongoose.connect(
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/mern-shopping",
+);
+
+
+
 mongoose.connection.on("connected", () => {
   console.log("Mongoose connected to MongoDB");
 });
