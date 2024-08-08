@@ -4,73 +4,48 @@ import { Link, useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { addToCart, selectCartItems } from "../../redux/cart/cartSlice";
-import {
-  startAuction,
-  placeBid,
-  selectAuctions,
-} from "../../redux/auction/auctionSlice";
+import { placeBid, selectAuctions } from "../../redux/auction/auctionSlice";
 import { pluralize } from "../../utils/helpers";
 import {
   useGetProductDetails,
   usePlaceBid,
   useGetAuctions,
 } from "../../utils/actions";
+import getAuthHeaders from "../../utils/auth";
 import socket from "../../utils/socket";
 import "./ProductItem.css";
 
 const ProductItem = () => {
   const { id } = useParams();
-  console.log("Product ID:", id);
-
   const { product, loading, error, refetch } = useGetProductDetails(id);
   const [currentProduct, setCurrentProduct] = useState(null);
-
   const dispatch = useDispatch();
   const cart = useSelector(selectCartItems);
   const auctions = useSelector(selectAuctions);
-
   const [bidAmount, setBidAmount] = useState(0);
   const [highestBid, setHighestBid] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [auctionActive, setAuctionActive] = useState(false);
-
   const { data: auctionsData, startPolling, stopPolling } = useGetAuctions();
   const [placeBid] = usePlaceBid();
 
   useEffect(() => {
     if (product) {
       setCurrentProduct(product);
-      console.log("Product data set:", product);
     }
   }, [product]);
 
   useEffect(() => {
-    if (auctionActive) {
-      console.log("Starting auction polling");
-      startPolling(1000);
-
-      return () => {
-        console.log("Stopping auction polling");
-        stopPolling();
-      };
-    }
-  }, [auctionActive, startPolling, stopPolling]);
-
-  useEffect(() => {
     if (auctionsData) {
-      console.log("Auctions data:", auctionsData);
       const auction = auctionsData.auctions.find(
         (a) => a.product && a.product.id === id
       );
       if (auction) {
-        console.log("Found auction for this product:", auction);
         setHighestBid(auction.bids[0]?.amount || auction.startingPrice);
         setTimeLeft(
           Math.floor((new Date(auction.endTime).getTime() - Date.now()) / 1000)
         );
         setAuctionActive(auction.status === "active");
-      } else {
-        console.log("No auction found for this product");
       }
     }
   }, [auctionsData, id]);
@@ -80,10 +55,8 @@ const ProductItem = () => {
       const timer = setInterval(() => {
         setTimeLeft((prevTime) => prevTime - 1);
       }, 1000);
-
       return () => clearInterval(timer);
     } else if (timeLeft <= 0 && auctionActive) {
-      console.log("Auction ended");
       setAuctionActive(false);
       const auction = auctionsData.auctions.find((a) => a.product.id === id);
       if (auction) {
@@ -91,9 +64,10 @@ const ProductItem = () => {
           (max, bid) => (bid.amount > max.amount ? bid : max),
           { amount: 0 }
         );
-        console.log("Highest bid:", highestBid);
         toast.success(
-          `Auction ended. Highest bid: $${highestBid.amount} by ${highestBid.user.username}`,
+          `Auction ended. Highest bid: $${highestBid.amount} by ${
+            highestBid.user?.username || "unknown user"
+          }`,
           {
             position: "top-center",
             autoClose: 2000,
@@ -109,12 +83,9 @@ const ProductItem = () => {
 
   useEffect(() => {
     const handleBidChange = async (change) => {
-      console.log("Bid change detected:", change);
       if (change.documentKey._id.toString() === id) {
-        console.log("Matching product ID, refetching data...");
         try {
           const { data } = await refetch();
-          console.log("Data refetched after change:", data.product);
           setCurrentProduct(data.product);
         } catch (err) {
           console.error("Error during refetch:", err);
@@ -130,7 +101,6 @@ const ProductItem = () => {
   }, [id, refetch]);
 
   const addToCartHandler = () => {
-    console.log("Adding to cart:", currentProduct);
     const itemInCart = cart.find((cartItem) => cartItem.id === id);
     if (itemInCart) {
       dispatch(
@@ -154,21 +124,16 @@ const ProductItem = () => {
   };
 
   const placeBidHandler = async () => {
-    console.log("Placing bid:", bidAmount);
     const token = await getAuthHeaders();
-
     if (!token) {
-      console.log("No auth token, redirecting to login");
       window.location.href = "/login";
       return;
     }
-
     if (bidAmount > highestBid) {
       try {
         const result = await placeBid({
           variables: { productId: id, amount: bidAmount },
         });
-        console.log("Bid placed successfully:", result);
         setHighestBid(bidAmount);
         toast.success(`New highest bid: $${bidAmount}`, {
           position: "top-center",
@@ -180,7 +145,6 @@ const ProductItem = () => {
         });
         dispatch(placeBid({ productId: id, bidAmount }));
       } catch (error) {
-        console.error("Error placing bid:", error);
         toast.error(`Error placing bid: ${error.message}`, {
           position: "top-center",
           autoClose: 2000,
@@ -191,7 +155,6 @@ const ProductItem = () => {
         });
       }
     } else {
-      console.log("Bid too low");
       toast.error(`Bid must be higher than $${highestBid}`, {
         position: "top-center",
         autoClose: 2000,
@@ -203,34 +166,9 @@ const ProductItem = () => {
     }
   };
 
-  const startAuctionHandler = (startingPrice, duration) => {
-    console.log(
-      "Starting auction with price:",
-      startingPrice,
-      "and duration:",
-      duration
-    );
-    setHighestBid(startingPrice);
-    setTimeLeft(duration);
-    setAuctionActive(true);
-    const auction = {
-      productId: id,
-      startingPrice,
-      endTime: new Date(Date.now() + duration * 1000).toISOString(),
-      bids: [],
-      status: "active",
-    };
-    dispatch(startAuction(auction));
-  };
-
   if (loading) return <div>Loading...</div>;
-  if (error) {
-    console.error("Error fetching product:", error);
-    return <div>Error: {error.message}</div>;
-  }
-
-  if (!currentProduct) {
-    console.log("Product not found");
+  if (error) return <div>Error: {error.message}</div>;
+  if (!currentProduct)
     return (
       <div className="product-not-found">
         <h2>Product Not Found</h2>
@@ -238,9 +176,6 @@ const ProductItem = () => {
         <Link to="/products">Back to Products</Link>
       </div>
     );
-  }
-
-  console.log("Rendering product:", currentProduct);
 
   return (
     <div className="product-detail-container">
@@ -260,15 +195,13 @@ const ProductItem = () => {
           </p>
           <p className="product-detail-price">${currentProduct.price}</p>
           <div>
-            <div>
-              {currentProduct.quantity}{" "}
-              {pluralize("item", currentProduct.quantity)} in stock
-            </div>
+            {currentProduct.quantity}{" "}
+            {pluralize("item", currentProduct.quantity)} in stock
           </div>
           <button className="product-detail-button" onClick={addToCartHandler}>
             Add to cart
           </button>
-          {auctionActive ? (
+          {auctionActive && (
             <div>
               <h2>Current Highest Bid: ${highestBid}</h2>
               <h2>
@@ -280,25 +213,6 @@ const ProductItem = () => {
                 onChange={(e) => setBidAmount(parseFloat(e.target.value))}
               />
               <button onClick={placeBidHandler}>Place Bid</button>
-            </div>
-          ) : (
-            <div>
-              <h2>Start an Auction</h2>
-              <input
-                type="number"
-                placeholder="Starting Price"
-                value={bidAmount}
-                onChange={(e) => setBidAmount(parseFloat(e.target.value) || 0)}
-              />
-              <input
-                type="number"
-                placeholder="Duration (seconds)"
-                value={timeLeft}
-                onChange={(e) => setTimeLeft(parseInt(e.target.value) || 0)}
-              />
-              <button onClick={() => startAuctionHandler(bidAmount, timeLeft)}>
-                Start Auction
-              </button>
             </div>
           )}
         </div>
