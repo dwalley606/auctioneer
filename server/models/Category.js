@@ -21,6 +21,4 @@ const categorySchema = new Schema({
 
 const Category = mongoose.model("Category", categorySchema);
 
-Category.watch().on("change", (data) => console.log(new Date(), data));
-
 module.exports = Category;

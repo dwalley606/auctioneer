@@ -17,6 +17,7 @@ import AuctionTimer from "./AuctionTimer";
 import { startAuction } from "../../../redux/auction/auctionSlice";
 import { useCreateAuction, useGetProductDetails } from "../../../utils/actions";
 import { selectAuctions } from "../../../redux/auction/auctionSlice";
+import socket from "../../../utils/socket";
 
 const ProductCard = ({ product, handleEdit, handleDelete }) => {
   const dispatch = useDispatch();
@@ -35,53 +36,69 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
     }
   }, [auction]);
 
+  useEffect(() => {
+    socket.on("bidChange", (data) => {
+      if (
+        data.fullDocument &&
+        data.fullDocument.product.toString() === product.id
+      ) {
+        console.log("Received bidChange event for product:", data);
+        refetch();
+      }
+    });
+
+    return () => {
+      socket.off("bidChange");
+    };
+  }, [product.id, refetch]);
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-const startAuctionHandler = async () => {
-  const totalDurationInSeconds =
-    parseInt(duration.minutes, 10) * 60 + parseInt(duration.seconds, 10);
-  try {
-    const startTime = dayjs();
-    const endTime = startTime.add(totalDurationInSeconds, "second");
+  const startAuctionHandler = async () => {
+    const totalDurationInSeconds =
+      parseInt(duration.minutes, 10) * 60 + parseInt(duration.seconds, 10);
+    try {
+      const startTime = dayjs().toDate(); // Convert to JavaScript Date object
+      const endTime = dayjs(startTime)
+        .add(totalDurationInSeconds, "second")
+        .toDate(); // Convert to JavaScript Date object
 
-    console.log("Start time:", startTime.format());
-    console.log("End time:", endTime.format());
+      console.log("Start time:", startTime.toISOString());
+      console.log("End time:", endTime.toISOString());
 
-    const { data, errors } = await createAuction({
-      variables: {
-        productId: product.id,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
-        startingPrice: parseFloat(startingPrice),
-        status: "active",
-      },
-    });
+      const { data, errors } = await createAuction({
+        variables: {
+          productId: product.id,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+          startingPrice: parseFloat(startingPrice),
+          status: "active",
+        },
+      });
 
-    if (errors) {
-      console.error("Errors in createAuction response:", errors);
-      // Handle errors (e.g., show an error message to the user)
-      return;
+      if (errors) {
+        console.error("Errors in createAuction response:", errors);
+        return;
+      }
+
+      if (data && data.createAuction) {
+        const auction = {
+          ...data.createAuction,
+          startTime: new Date(data.createAuction.startTime),
+          endTime: new Date(data.createAuction.endTime),
+        };
+        console.log("Auction started:", auction);
+        dispatch(startAuction(auction));
+        handleClose();
+        await refetch();
+      } else {
+        console.error("Unexpected response from createAuction:", data);
+      }
+    } catch (error) {
+      console.error("Error starting auction:", error);
     }
-
-    if (data && data.createAuction) {
-      const auction = data.createAuction;
-      console.log("Auction started:", auction);
-      dispatch(startAuction(auction));
-      handleClose();
-
-      // Refetch product details
-      await refetch();
-    } else {
-      console.error("Unexpected response from createAuction:", data);
-      // Handle unexpected response (e.g., show an error message to the user)
-    }
-  } catch (error) {
-    console.error("Error starting auction:", error);
-    // Handle error (e.g., show an error message to the user)
-  }
-};
-
+  };
 
   return (
     <Card sx={{ maxWidth: 345, margin: 2 }}>
@@ -109,7 +126,8 @@ const startAuctionHandler = async () => {
         {auction && (
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Time Left: <AuctionTimer date={auction.endTime} />
+              Time Left:{" "}
+              <AuctionTimer date={dayjs(auction.endTime).toISOString()} />
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Highest Bid: ${highestBid.toFixed(2)}

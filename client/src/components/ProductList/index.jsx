@@ -10,6 +10,7 @@ import {
   selectCartItems,
 } from "../../redux/cart/cartSlice";
 import "./ProductList.css";
+import socket from "../../utils/socket";
 
 const ProductList = () => {
   const dispatch = useDispatch();
@@ -24,6 +25,15 @@ const ProductList = () => {
   useEffect(() => {
     console.log("Fetching products...");
     dispatch(fetchProducts());
+
+    socket.on("bidChange", (data) => {
+      console.log("Received bidChange event:", data);
+      dispatch(fetchProducts());
+    });
+
+    return () => {
+      socket.off("bidChange");
+    };
   }, [dispatch]);
 
   const filterProducts = () => {
