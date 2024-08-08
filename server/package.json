@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "watch": "nodemon",
-    "seed": "node config/seeds.js",
+    "seed": "node config/newSeeds.js",
     "test": "jest"
   },
   "jest": {
@@ -20,6 +20,7 @@
   "license": "ISC",
   "dependencies": {
     "@apollo/server": "^4.10.5",
+    "@faker-js/faker": "^8.4.1",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
