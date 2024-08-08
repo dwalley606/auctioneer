@@ -1,15 +1,17 @@
 import { Alert, Button, Modal, TextInput } from "flowbite-react";
 import { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
-import {
-  getDownloadURL,
-  getStorage,
-  ref,
-  uploadBytesResumable,
-} from "firebase/storage";
-import { app, storage } from "../../firebase/config"; 
+import { useSelector, useDispatch } from "react-redux";
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import { HiOutlineExclamationCircle } from "react-icons/hi";
+import { Link } from "react-router-dom";
+import { getToken } from "../../../utils/auth";
+import "../../../pages/css/Dashboard.css";
+import {
+  useGetUserProfile,
+  useUpdateUserProfile,
+} from "../../../utils/actions";
+import { uploadImage } from "../../../utils/uploadImage";
 import {
   updateStart,
   updateSuccess,
@@ -18,12 +20,7 @@ import {
   deleteUserSuccess,
   deleteUserFailure,
   signoutSuccess,
-} from "../../redux/user/userSlice";
-import { useDispatch } from "react-redux";
-import { HiOutlineExclamationCircle } from "react-icons/hi";
-import { Link } from "react-router-dom";
-import { getToken } from "../../utils/auth";
-import './DashProfile.css';
+} from "../../../redux/user/userSlice";
 
 export default function DashProfile() {
   const { currentUser, error, loading } = useSelector((state) => state.user);
@@ -39,6 +36,10 @@ export default function DashProfile() {
   const filePickerRef = useRef();
   const dispatch = useDispatch();
 
+  const { data: userProfileData, refetch: refetchUserProfile } =
+    useGetUserProfile();
+  const [updateUserProfile] = useUpdateUserProfile();
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -49,42 +50,28 @@ export default function DashProfile() {
 
   useEffect(() => {
     if (imageFile) {
-      uploadImage();
+      uploadImageFile();
     }
   }, [imageFile]);
 
-  const uploadImage = async () => {
+  const uploadImageFile = async () => {
     setImageFileUploading(true);
     setImageFileUploadError(null);
-    const storage = getStorage(app);
-    const fileName = new Date().getTime() + imageFile.name;
-    const storageRef = ref(storage, fileName);
-    const uploadTask = uploadBytesResumable(storageRef, imageFile);
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setImageFileUploadProgress(progress.toFixed(0));
-      },
-      (error) => {
-        setImageFileUploadError(
-          "Could not upload image (File must be less than 2MB)"
-        );
-        setImageFileUploadProgress(null);
-        setImageFile(null);
-        setImageFileUrl(null);
-        setImageFileUploading(false);
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          setImageFileUrl(downloadURL);
-          setFormData({ ...formData, profilePicture: downloadURL });
-          setImageFileUploading(false);
-        });
-      }
-    );
+
+    try {
+      const downloadURL = await uploadImage(imageFile);
+      setImageFileUrl(downloadURL);
+      setFormData({ ...formData, photoUrl: downloadURL });
+      setImageFileUploading(false);
+    } catch (error) {
+      setImageFileUploadError(error);
+      setImageFileUploadProgress(null);
+      setImageFile(null);
+      setImageFileUrl(null);
+      setImageFileUploading(false);
+    }
   };
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -94,6 +81,7 @@ export default function DashProfile() {
     e.preventDefault();
     setUpdateUserError(null);
     setUpdateUserSuccess(null);
+
     if (Object.keys(formData).length === 0) {
       setUpdateUserError("No changes made");
       return;
@@ -111,24 +99,18 @@ export default function DashProfile() {
 
     try {
       dispatch(updateStart());
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/user/update/${currentUser._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        dispatch(updateFailure(data.message));
-        setUpdateUserError(data.message);
-      } else {
-        dispatch(updateSuccess(data));
+      const { data } = await updateUserProfile({
+        variables: { input: formData },
+        context: {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      });
+      if (data && data.updateUserProfile) {
+        dispatch(updateSuccess(data.updateUserProfile));
         setUpdateUserSuccess("User's profile updated successfully");
+        refetchUserProfile();
+      } else {
+        throw new Error("Failed to update profile");
       }
     } catch (error) {
       dispatch(updateFailure(error.message));
@@ -186,9 +168,9 @@ export default function DashProfile() {
   };
 
   return (
-    <div className="max-w-lg mx-auto p-3 w-full">
-      <h1 className="my-7 text-center font-semibold text-3xl">Profile</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <div className="profile-container">
+      <h1 className="profile-header">Profile</h1>
+      <form onSubmit={handleSubmit} className="profile-form">
         <input
           type="file"
           accept="image/*"
@@ -197,7 +179,7 @@ export default function DashProfile() {
           hidden
         />
         <div
-          className="relative w-32 h-32 self-center cursor-pointer shadow-md overflow-hidden rounded-full"
+          className="profile-avatar-container"
           onClick={() => filePickerRef.current.click()}
         >
           {imageFileUploadProgress && (
@@ -207,8 +189,8 @@ export default function DashProfile() {
               strokeWidth={5}
               styles={{
                 root: {
-                  width: "25px",
-                  height: "25px",
+                  width: "100%",
+                  height: "100%",
                   position: "absolute",
                   top: 0,
                   left: 0,
@@ -223,11 +205,11 @@ export default function DashProfile() {
           )}
           <img
             src={imageFileUrl || currentUser.profilePicture}
-            alt="User"
-            className={`rounded-full w-full h-full object-cover border-8 border-[lightgray] ${
+            alt="user"
+            className={`profile-avatar ${
               imageFileUploadProgress &&
               imageFileUploadProgress < 100 &&
-              "opacity-60"
+              "profile-avatar-uploading"
             }`}
           />
         </div>
@@ -240,7 +222,7 @@ export default function DashProfile() {
           placeholder="username"
           defaultValue={currentUser.username}
           onChange={handleChange}
-          autoComplete="username" // added autoComplete attribute
+          autoComplete="username"
         />
         <TextInput
           type="email"
@@ -248,14 +230,14 @@ export default function DashProfile() {
           placeholder="email"
           defaultValue={currentUser.email}
           onChange={handleChange}
-          autoComplete="email" // added autoComplete attribute
+          autoComplete="email"
         />
         <TextInput
           type="password"
           id="password"
           placeholder="password"
           onChange={handleChange}
-          autoComplete="new-password" // added autoComplete attribute
+          autoComplete="new-password"
         />
         <Button
           type="submit"
@@ -265,38 +247,30 @@ export default function DashProfile() {
         >
           {loading ? "Loading..." : "Update"}
         </Button>
-        {currentUser.isAdmin && (
-          <Link to={"/create-post"}>
-            <Button
-              type="button"
-              gradientDuoTone="purpleToPink"
-              className="w-full"
-            >
-              Create a post
-            </Button>
-          </Link>
-        )}
       </form>
-      <div className="text-red-500 flex justify-between mt-5">
-        <span onClick={() => setShowModal(true)} className="cursor-pointer">
+      <div className="profile-footer">
+        <span
+          onClick={() => setShowModal(true)}
+          className="profile-footer-link"
+        >
           Delete Account
         </span>
-        <span onClick={handleSignout} className="cursor-pointer">
+        <span onClick={handleSignout} className="profile-footer-link">
           Sign Out
         </span>
       </div>
       {updateUserSuccess && (
-        <Alert color="success" className="mt-5">
+        <Alert color="success" className="profile-alert">
           {updateUserSuccess}
         </Alert>
       )}
       {updateUserError && (
-        <Alert color="failure" className="mt-5">
+        <Alert color="failure" className="profile-alert">
           {updateUserError}
         </Alert>
       )}
       {error && (
-        <Alert color="failure" className="mt-5">
+        <Alert color="failure" className="profile-alert">
           {error}
         </Alert>
       )}
@@ -309,11 +283,11 @@ export default function DashProfile() {
         <Modal.Header />
         <Modal.Body>
           <div className="text-center">
-            <HiOutlineExclamationCircle className="h-14 w-14 text-gray-400 dark:text-gray-200 mb-4 mx-auto" />
-            <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">
+            <HiOutlineExclamationCircle className="modal-icon" />
+            <h3 className="modal-header">
               Are you sure you want to delete your account?
             </h3>
-            <div className="flex justify-center gap-4">
+            <div className="modal-footer">
               <Button color="failure" onClick={handleDeleteUser}>
                 Yes, I&apos;m sure
               </Button>
@@ -327,4 +301,3 @@ export default function DashProfile() {
     </div>
   );
 }
-

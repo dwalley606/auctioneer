@@ -8,12 +8,14 @@ import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
-import CurrentBids from "./pages/currentBids.jsx";
-import Auctions from "./pages/auctions.jsx";
+import CurrentBids from "./pages/CurrentBids.jsx";
+import Auctions from "./pages/Auctions.jsx";
 import App from "./App.jsx";
-import Contact from "./pages/contact.jsx";
-import { StoreProvider, initialState } from "./utils/GlobalState";
+import Contact from "./pages/Contact.jsx";
 import ProductItem from "./components/ProductItem";
+import Posting from "./pages/Posting";
+import { ProSidebarProvider } from "react-pro-sidebar";
+import { DashSidebarProvider } from "./components/Dashboard/Sidebar/sidebarContext";
 
 const router = createBrowserRouter([
   {
@@ -33,8 +35,14 @@ const router = createBrowserRouter([
         element: <Signup />,
       },
       {
-        path: "dashboard",
-        element: <Dashboard />,
+        path: "dashboard/*",
+        element: (
+          <ProSidebarProvider>
+            <DashSidebarProvider>
+              <Dashboard />
+            </DashSidebarProvider>
+          </ProSidebarProvider>
+        ),
       },
       {
         path: "products/:id",
@@ -51,15 +59,19 @@ const router = createBrowserRouter([
       {
         path: "contact",
         element: <Contact />,
-      }
+      },
+      {
+        path: "posting",
+        element: <Posting />,
+      },
     ],
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-    <PersistGate persistor={persistor}>
-      <Provider store={store}>
-        <RouterProvider router={router} />
-      </Provider>
+  <Provider store={store}>
+    <PersistGate loading={null} persistor={persistor}>
+      <RouterProvider router={router} />
     </PersistGate>
+  </Provider>
 );

@@ -1,4 +1,3 @@
-// server/config/connection.js
 const mongoose = require("mongoose");
 
 mongoose.connect(
@@ -11,6 +10,10 @@ mongoose.connection.on("connected", () => {
 
 mongoose.connection.on("error", (err) => {
   console.error("Mongoose connection error:", err);
+});
+
+mongoose.connection.on("disconnected", () => {
+  console.log("Mongoose disconnected from MongoDB");
 });
 
 module.exports = mongoose.connection;

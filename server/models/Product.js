@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 const { Schema } = mongoose;
 
 const productSchema = new Schema({
@@ -29,6 +28,11 @@ const productSchema = new Schema({
   category: {
     type: Schema.Types.ObjectId,
     ref: "Category",
+    required: true,
+  },
+  subcategory: {
+    type: Schema.Types.ObjectId,
+    ref: "Subcategory",
     required: true,
   },
   seller: {

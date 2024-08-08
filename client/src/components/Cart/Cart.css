@@ -58,3 +58,20 @@
 .checkout-button:hover {
   background-color: #555;
 }
+
+.cart-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: fixed;
+  inset: 0;
+  left: 25%;
+  background-color: white;
+  gap: 2rem;
+  padding: 2.5rem;
+  color: black;
+  font-weight: normal;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  z-index: 1000;
+}
