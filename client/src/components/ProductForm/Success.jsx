@@ -1,39 +1,40 @@
 import React, { useEffect } from "react";
-import { useMutation } from "@apollo/client";
-import { CREATE_PRODUCT } from "../../utils/mutations";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Dialog from "@mui/material/Dialog";
 import AppBar from "@mui/material/AppBar";
+import { createProduct } from "../../redux/products/productsSlice";
 
 const theme = createTheme();
 
 const Success = ({ values }) => {
+  const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
-  const [createProduct] = useMutation(CREATE_PRODUCT);
 
   useEffect(() => {
     const submitProduct = async () => {
       try {
         console.log("Success: Creating product with values:", values);
-        const { data } = await createProduct({
-          variables: {
-            name: values.name,
-            description: values.description,
-            price: parseFloat(values.price),
-            quantity: parseInt(values.quantity, 10),
-            categoryId: values.categoryId,
-            image: values.image,
-          },
-        });
-        console.log("Product created successfully:", data.createProduct);
+        const productData = {
+          name: values.name,
+          description: values.description,
+          price: parseFloat(values.price),
+          quantity: parseInt(values.quantity, 10),
+          categoryId: String(values.categoryId),
+          subcategoryId: String(values.subcategoryId),
+          image: values.image,
+          sellerId: String(currentUser.id),
+        };
+
+        const result = await dispatch(createProduct(productData)).unwrap();
+        console.log("Product created successfully:", result);
       } catch (error) {
         console.error("Error creating product:", error);
       }
     };
 
     submitProduct();
-  }, [createProduct, values, currentUser]);
+  }, [dispatch, values, currentUser]);
 
   return (
     <ThemeProvider theme={theme}>

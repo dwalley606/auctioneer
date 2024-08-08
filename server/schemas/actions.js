@@ -1,6 +1,9 @@
+const mongoose = require("mongoose");
+const { ApolloError } = require("apollo-server-express");
 const User = require("../models/User");
 const Product = require("../models/Product");
 const Category = require("../models/Category");
+const Subcategory = require("../models/Subcategory");
 const Order = require("../models/Order");
 const Feedback = require("../models/Feedback");
 const Auction = require("../models/Auction");
@@ -65,29 +68,63 @@ const signout = async (req, res) => {
 
 const getUsers = async () => User.find();
 
-const createProduct = async (
-  name,
-  description,
-  quantity,
-  price,
-  categoryId,
-  sellerId,
-  image
-) => {
-  const product = new Product({
-    name,
-    description,
-    quantity,
-    price,
-    category: categoryId,
-    seller: sellerId,
-    image,
-  });
-  await product.save();
-  return product;
+const createProduct = async (input) => {
+  try {
+    const product = new Product({
+      name: input.name,
+      description: input.description,
+      quantity: input.quantity,
+      price: input.price,
+      category: new mongoose.Types.ObjectId(input.categoryId),
+      subcategory: new mongoose.Types.ObjectId(input.subcategoryId),
+      seller: new mongoose.Types.ObjectId(input.sellerId),
+      image: input.image,
+    });
+
+    await product.save();
+
+    const populatedProduct = await Product.findById(product._id)
+      .populate("category")
+      .populate("subcategory")
+      .populate("seller")
+      .exec();
+
+    if (!populatedProduct) {
+      throw new Error("Product not found after creation");
+    }
+
+    return {
+      ...populatedProduct.toObject(),
+      id: populatedProduct._id.toString(),
+      category: populatedProduct.category
+        ? {
+            ...populatedProduct.category.toObject(),
+            id: populatedProduct.category._id.toString(),
+          }
+        : null,
+      subcategory: populatedProduct.subcategory
+        ? {
+            ...populatedProduct.subcategory.toObject(),
+            id: populatedProduct.subcategory._id.toString(),
+          }
+        : null,
+      seller: populatedProduct.seller
+        ? {
+            ...populatedProduct.seller.toObject(),
+            id: populatedProduct.seller._id.toString(),
+          }
+        : null,
+    };
+  } catch (error) {
+    console.error("Error in createProduct:", error);
+    throw new ApolloError(error.message, "INTERNAL_SERVER_ERROR", {
+      originalError: error,
+    });
+  }
 };
 
-const getProducts = async () => Product.find().populate("category");
+const getProducts = async () =>
+  Product.find().populate("category").populate("subcategory");
 
 const createCategory = async (name) => {
   const category = new Category({ name });
@@ -99,10 +136,10 @@ const getCategories = async () => Category.find();
 
 const createOrder = async (buyerId, productId, amount, paymentId) => {
   const order = new Order({
-    buyer: buyerId,
-    product: productId,
+    buyer: new mongoose.Types.ObjectId(buyerId),
+    product: new mongoose.Types.ObjectId(productId),
     amount,
-    payment: paymentId,
+    payment: new mongoose.Types.ObjectId(paymentId),
   });
   await order.save();
   return order;
@@ -119,9 +156,9 @@ const createFeedback = async (
   comment
 ) => {
   const feedback = new Feedback({
-    fromUser: fromUserId,
-    toUser: toUserId,
-    product: productId,
+    fromUser: new mongoose.Types.ObjectId(fromUserId),
+    toUser: new mongoose.Types.ObjectId(toUserId),
+    product: new mongoose.Types.ObjectId(productId),
     rating,
     comment,
   });
@@ -143,7 +180,7 @@ const createAuction = async (
   if (!product) throw new Error(`Product with ID ${productId} does not exist`);
 
   const auction = new Auction({
-    product: productId,
+    product: new mongoose.Types.ObjectId(productId),
     startTime,
     endTime,
     startingPrice,
@@ -158,8 +195,8 @@ const getAuctions = async () =>
 
 const placeBid = async (userId, productId, amount) => {
   const bid = new Bid({
-    user: userId,
-    product: productId,
+    user: new mongoose.Types.ObjectId(userId),
+    product: new mongoose.Types.ObjectId(productId),
     amount,
     timestamp: new Date(),
   });
@@ -172,7 +209,7 @@ const getBids = async () => Bid.find().populate("user").populate("product");
 
 const createPayment = async (orderId, method, status, transactionId) => {
   const payment = new Payment({
-    order: orderId,
+    order: new mongoose.Types.ObjectId(orderId),
     method,
     status,
     transactionId,
@@ -185,7 +222,7 @@ const getPayments = async () => Payment.find().populate("order");
 
 const createNotification = async (userId, message) => {
   const notification = new Notification({
-    user: userId,
+    user: new mongoose.Types.ObjectId(userId),
     message,
     read: false,
     timestamp: new Date(),

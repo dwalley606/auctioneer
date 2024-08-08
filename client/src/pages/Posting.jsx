@@ -17,6 +17,24 @@ import Typography from "@mui/material/Typography";
 import "./css/Posting.css";
 import { uploadImage } from "../utils/uploadImage";
 
+const validateForm = (formData, auctionData, isAuction) => {
+  const errors = {};
+  if (!formData.name) errors.name = "Name is required";
+  if (!formData.description) errors.description = "Description is required";
+  if (!formData.price) errors.price = "Price is required";
+  if (!formData.quantity) errors.quantity = "Quantity is required";
+  if (!formData.categoryId) errors.categoryId = "Category is required";
+  if (!formData.subcategoryId) errors.subcategoryId = "Subcategory is required";
+  if (!formData.image) errors.image = "Image is required";
+  if (isAuction) {
+    if (!auctionData.startingPrice)
+      errors.startingPrice = "Starting price is required";
+    if (!auctionData.startTime) errors.startTime = "Start time is required";
+    if (!auctionData.endTime) errors.endTime = "End time is required";
+  }
+  return errors;
+};
+
 const Posting = () => {
   const { currentUser } = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -29,6 +47,7 @@ const Posting = () => {
     price: "",
     quantity: "",
     categoryId: "",
+    subcategoryId: "",
     image: null,
   });
 
@@ -65,54 +84,12 @@ const Posting = () => {
     }));
   };
 
-  const validateForm = () => {
-    const errors = {};
-    if (!formData.name) errors.name = "Name is required";
-    if (!formData.description) errors.description = "Description is required";
-    if (!formData.price) errors.price = "Price is required";
-    if (!formData.quantity) errors.quantity = "Quantity is required";
-    if (!formData.categoryId) errors.categoryId = "Category is required";
-    if (!formData.image) errors.image = "Image is required";
-    if (isAuction) {
-      if (!auctionData.startingPrice)
-        errors.startingPrice = "Starting price is required";
-      if (!auctionData.startTime) errors.startTime = "Start time is required";
-      if (!auctionData.endTime) errors.endTime = "End time is required";
-    }
-    return errors;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      console.log("Posting: Form validation errors", errors);
-      return;
-    }
-
-    try {
-      const imageUrl = await uploadImage(formData.image);
-      const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        quantity: parseInt(formData.quantity, 10),
-        categoryId: String(formData.categoryId),
-        image: imageUrl,
-      };
-
-      console.log("Form Data: ", productData);
-
-      const result = await dispatch(createProduct(productData)).unwrap();
-      console.log("Product created successfully", result);
-      nextStep();
-    } catch (error) {
-      console.error("Error creating product:", error);
-    }
-  };
-
   const nextStep = () => setStep((prevStep) => prevStep + 1);
   const prevStep = () => setStep((prevStep) => prevStep - 1);
+
+   const handleNext = () => nextStep();
+   const handleBack = () => prevStep();
+   const handleStep = (step) => () => setStep(step);
 
   const values = { ...formData, ...auctionData };
 
@@ -138,12 +115,9 @@ const Posting = () => {
   const isLastStep = () => step === totalSteps() - 1;
   const allStepsCompleted = () => step === totalSteps();
 
-  const handleNext = () => nextStep();
-  const handleBack = () => prevStep();
-  const handleStep = (step) => () => setStep(step);
   const handleComplete = () => {
-    if (step === 2) {
-      const errors = validateForm();
+    if (step === 3 || (step === 2 && !isAuction)) {
+      const errors = validateForm(formData, auctionData, isAuction);
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
         console.log("Posting: Form validation errors", errors);
@@ -152,7 +126,55 @@ const Posting = () => {
     }
     nextStep();
   };
+
   const handleReset = () => setStep(0);
+
+ const handleSubmit = async (
+   e,
+   formData,
+   auctionData,
+   isAuction,
+   currentUser
+ ) => {
+   e.preventDefault();
+   const errors = validateForm(formData, auctionData, isAuction);
+   if (Object.keys(errors).length > 0) {
+     setFormErrors(errors);
+     console.log("Posting: Form validation errors", errors);
+     return;
+   }
+
+   try {
+     const imageUrl = await uploadImage(formData.image);
+     const productData = {
+       name: formData.name,
+       description: formData.description,
+       price: parseFloat(formData.price),
+       quantity: parseInt(formData.quantity, 10),
+       categoryId: formData.categoryId,
+       subcategoryId: formData.subcategoryId,
+       image: imageUrl,
+       sellerId: currentUser.id.toString(),
+     };
+
+     if (isAuction) {
+       productData.startingPrice = parseFloat(auctionData.startingPrice);
+       productData.startTime = auctionData.startTime;
+       productData.endTime = auctionData.endTime;
+     }
+
+     console.log("Form Data to be sent:", productData);
+
+     const result = await dispatch(createProduct(productData)).unwrap();
+     console.log("Product created successfully", result);
+     nextStep();
+   } catch (error) {
+     console.error("Error creating product:", error);
+     console.error("Full error object:", JSON.stringify(error, null, 2));
+     setFormErrors({ submit: error.message || "Failed to create product" });
+   }
+ };
+
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -163,7 +185,7 @@ const Posting = () => {
         <Stepper nonLinear activeStep={step}>
           {steps.map((label, index) => (
             <Step key={label}>
-              <StepButton color="inherit" onClick={handleStep(index)}>
+              <StepButton color="inherit" onClick={() => setStep(index)}>
                 {label}
               </StepButton>
             </Step>
@@ -203,38 +225,24 @@ const Posting = () => {
                 categories={categories}
               />
             )}
-            {step === 3 && isAuction && (
-              <AuctionDetails
-                nextStep={nextStep}
-                prevStep={prevStep}
-                handleChange={handleAuctionChange}
-                values={values}
-              />
-            )}
-            {step === 3 && !isAuction && (
+            {step === 3 && (
               <Confirm
                 nextStep={nextStep}
                 prevStep={prevStep}
                 values={values}
+                auctionData={auctionData}
+                isAuction={isAuction}
                 handleSubmit={handleSubmit}
+                currentUser={currentUser}
               />
             )}
-            {step === 4 && isAuction && (
-              <Confirm
-                nextStep={nextStep}
-                prevStep={prevStep}
-                values={values}
-                handleSubmit={handleSubmit}
-              />
-            )}
-            {step === 4 && !isAuction && <Success values={values} />}
-            {step === 5 && isAuction && <Success values={values} />}
+            {step === 4 && <Success values={values} />}
             <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
               {step > 0 && (
                 <Button
                   color="inherit"
                   disabled={step === 0}
-                  onClick={handleBack}
+                  onClick={prevStep}
                   sx={{ mr: 1 }}
                 >
                   Back

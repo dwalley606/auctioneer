@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -17,6 +18,9 @@ const ProductDetails = ({
   categories,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(
+    values.categoryId || ""
+  );
   const dispatch = useDispatch();
   const {
     items: fetchedCategories,
@@ -68,6 +72,13 @@ const ProductDetails = ({
     }
   };
 
+  const handleCategoryChange = (e) => {
+    const categoryId = e.target.value;
+    setSelectedCategory(categoryId);
+    handleChange("categoryId")(e);
+    handleChange("subcategoryId")({ target: { value: "" } });
+  };
+
   const isFormValid = () => {
     const requiredFields = [
       "name",
@@ -75,6 +86,7 @@ const ProductDetails = ({
       "price",
       "quantity",
       "categoryId",
+      "subcategoryId",
       "image",
     ];
     const missingFields = requiredFields.filter((field) => !values[field]);
@@ -133,22 +145,44 @@ const ProductDetails = ({
           select
           label="Category"
           name="categoryId"
-          value={values.categoryId}
-          onChange={handleChange("categoryId")}
-          SelectProps={{
-            native: true,
-          }}
+          value={selectedCategory}
+          onChange={handleCategoryChange}
           helperText="Please select a category"
           margin="normal"
           fullWidth
         >
-          <option value=""></option>
+          <MenuItem value="">
+            <em>None</em>
+          </MenuItem>
           {fetchedCategories.map((category) => (
-            <option key={category.id} value={category.id}>
+            <MenuItem key={category.id} value={category.id}>
               {category.name}
-            </option>
+            </MenuItem>
           ))}
         </TextField>
+        {selectedCategory && (
+          <TextField
+            select
+            label="Subcategory"
+            name="subcategoryId"
+            value={values.subcategoryId}
+            onChange={handleChange("subcategoryId")}
+            helperText="Please select a subcategory"
+            margin="normal"
+            fullWidth
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {fetchedCategories
+              .find((cat) => cat.id === selectedCategory)
+              .subcategories.map((subcat) => (
+                <MenuItem key={subcat.id} value={subcat.id}>
+                  {subcat.name}
+                </MenuItem>
+              ))}
+          </TextField>
+        )}
         <Box
           className={`dropzone ${isDragging ? "dragging" : ""}`}
           onDragOver={handleDragOver}

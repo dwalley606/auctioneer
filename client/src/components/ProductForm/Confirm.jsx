@@ -5,23 +5,19 @@ import Button from "@mui/material/Button";
 
 const theme = createTheme();
 
-const Confirm = ({ values, nextStep, prevStep, handleSubmit }) => {
-  const {
-    name,
-    description,
-    price,
-    quantity,
-    categoryId,
-    image,
-    startingPrice,
-    startTime,
-    endTime,
-  } = values;
-
+const Confirm = ({
+  values,
+  auctionData,
+  isAuction,
+  nextStep,
+  prevStep,
+  handleSubmit,
+  currentUser,
+}) => {
   const continueStep = (e) => {
     e.preventDefault();
     console.log("Confirm: Submitting form with values:", values);
-    handleSubmit(e);
+    handleSubmit(e, values, auctionData, isAuction, currentUser);
     nextStep();
   };
 
@@ -37,36 +33,51 @@ const Confirm = ({ values, nextStep, prevStep, handleSubmit }) => {
         <h3>Confirm Product Data</h3>
         <List>
           <ListItem>
-            <ListItemText primary="Product Name" secondary={name} />
+            <ListItemText primary="Product Name" secondary={values.name} />
           </ListItem>
           <ListItem>
-            <ListItemText primary="Description" secondary={description} />
+            <ListItemText
+              primary="Description"
+              secondary={values.description}
+            />
           </ListItem>
           <ListItem>
-            <ListItemText primary="Price" secondary={price} />
+            <ListItemText primary="Price" secondary={values.price} />
           </ListItem>
           <ListItem>
-            <ListItemText primary="Quantity" secondary={quantity} />
+            <ListItemText primary="Quantity" secondary={values.quantity} />
           </ListItem>
           <ListItem>
-            <ListItemText primary="Category" secondary={categoryId} />
+            <ListItemText primary="Category" secondary={values.categoryId} />
           </ListItem>
           <ListItem>
-            <ListItemText primary="Image URL" secondary={image} />
+            <ListItemText
+              primary="Subcategory"
+              secondary={values.subcategoryId}
+            />
           </ListItem>
-          {startingPrice && (
+          <ListItem>
+            <ListItemText primary="Image URL" secondary={values.image} />
+          </ListItem>
+          {isAuction && (
             <>
               <ListItem>
                 <ListItemText
                   primary="Starting Price"
-                  secondary={startingPrice}
+                  secondary={auctionData.startingPrice}
                 />
               </ListItem>
               <ListItem>
-                <ListItemText primary="Start Time" secondary={startTime} />
+                <ListItemText
+                  primary="Start Time"
+                  secondary={auctionData.startTime}
+                />
               </ListItem>
               <ListItem>
-                <ListItemText primary="End Time" secondary={endTime} />
+                <ListItemText
+                  primary="End Time"
+                  secondary={auctionData.endTime}
+                />
               </ListItem>
             </>
           )}

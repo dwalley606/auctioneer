@@ -16,120 +16,114 @@ const GET_PRODUCTS = gql`
         id
         name
       }
+      subcategory {
+        id
+        name
+      }
+      seller {
+        id
+        username
+      }
     }
   }
 `;
 
 const CREATE_PRODUCT = gql`
-  mutation CreateProduct(
-    $name: String!
-    $description: String!
-    $price: Float!
-    $quantity: Int!
-    $categoryId: ID!
-    $image: String!
-    $userId: ID!
-  ) {
-    createProduct(
-      name: $name
-      description: $description
-      price: $price
-      quantity: $quantity
-      categoryId: $categoryId
-      image: $image
-      userId: $userId
-    ) {
+  mutation CreateProduct($input: CreateProductInput!) {
+    createProduct(input: $input) {
       id
       name
       description
-      price
+      image
       quantity
+      price
       category {
         id
         name
       }
-      image
+      subcategory {
+        id
+        name
+      }
+      seller {
+        id
+        username
+      }
     }
   }
 `;
 
-export const createProduct = createAsyncThunk(
-  "products/createProduct",
-  async (productData, thunkAPI) => {
-    const state = thunkAPI.getState();
-    const userId = state.user.currentUser.id;
+const initialState = {
+  items: [],
+  loading: false,
+  error: null,
+};
 
-    if (!userId) {
-      console.error("User not authenticated");
-      return thunkAPI.rejectWithValue("User not authenticated");
-    }
-
-    const headers = getAuthHeaders();
-
+export const fetchProducts = createAsyncThunk(
+  "products/fetchProducts",
+  async (_, thunkAPI) => {
     try {
-      const response = await client.mutate({
-        mutation: CREATE_PRODUCT,
-        variables: {
-          ...productData,
-          userId: String(userId),
-          categoryId: String(productData.categoryId),
-        },
+      const { data } = await client.query({
+        query: GET_PRODUCTS,
         context: {
-          headers: {
-            ...headers,
-          },
+          headers: getAuthHeaders(),
         },
       });
-
-      console.log(
-        "Product created successfully: ",
-        response.data.createProduct
-      );
-      return response.data.createProduct;
+      return data.products;
     } catch (error) {
-      console.error("Error creating product:", error);
       return thunkAPI.rejectWithValue(error.message);
     }
   }
 );
 
-export const fetchProducts = createAsyncThunk(
-  "products/fetchProducts",
-  async () => {
+export const createProduct = createAsyncThunk(
+  "products/createProduct",
+  async (productData, { rejectWithValue }) => {
     try {
-      const response = await client.query({
-        query: GET_PRODUCTS,
+      const input = {
+        name: productData.name,
+        description: productData.description,
+        price: parseFloat(productData.price),
+        quantity: parseInt(productData.quantity, 10),
+        categoryId: productData.categoryId,
+        subcategoryId: productData.subcategoryId,
+        image: productData.image,
+        sellerId: productData.sellerId,
+      };
+
+      console.log("Sending product data:", JSON.stringify(input, null, 2));
+
+      const response = await client.mutate({
+        mutation: CREATE_PRODUCT,
+        variables: { input },
       });
-      console.log("Fetched products: ", response.data.products);
-      return response.data.products;
+
+      console.log("Server response:", JSON.stringify(response, null, 2));
+      return response.data.createProduct;
     } catch (error) {
-      console.error("Error fetching products:", error);
-      throw error;
+      console.error("Error in createProduct thunk:", error);
+      if (error.graphQLErrors) {
+        console.error(
+          "GraphQL errors:",
+          JSON.stringify(error.graphQLErrors, null, 2)
+        );
+      }
+      if (error.networkError) {
+        console.error("Network error:", error.networkError);
+      }
+      return rejectWithValue(
+        error.message || "An error occurred while creating the product"
+      );
     }
   }
 );
 
 const productsSlice = createSlice({
   name: "products",
-  initialState: {
-    items: [],
-    loading: false,
-    error: null,
-  },
+  initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(createProduct.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(createProduct.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items.push(action.payload);
-      })
-      .addCase(createProduct.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || action.error.message;
-      })
       .addCase(fetchProducts.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -140,7 +134,19 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload;
+      })
+      .addCase(createProduct.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items.push(action.payload);
+      })
+      .addCase(createProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
