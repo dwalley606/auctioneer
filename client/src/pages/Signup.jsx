@@ -4,7 +4,6 @@ import { useMutation } from "@apollo/client";
 import { useSelector, useDispatch } from "react-redux";
 import AuthService from "../utils/auth";
 import { SIGNUP_USER } from "../utils/mutations";
-import '../assets/CSS/signup.css'
 import OAuth from "../components/OAuth/OAuth";
 import { Alert, Button, Label, Spinner, TextInput } from "flowbite-react";
 import {
