@@ -6,11 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { addToCart, selectCartItems } from "../../redux/cart/cartSlice";
 import { placeBid, selectAuctions } from "../../redux/auction/auctionSlice";
 import { pluralize } from "../../utils/helpers";
-import {
-  useGetProductDetails,
-  usePlaceBid,
-  useGetAuctions,
-} from "../../utils/actions";
+import { useGetProductDetails } from "../../utils/actions";
 import getAuthHeaders from "../../utils/auth";
 import socket from "../../utils/socket";
 import "./ProductItem.css";
@@ -26,22 +22,20 @@ const ProductItem = () => {
   const [highestBid, setHighestBid] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [auctionActive, setAuctionActive] = useState(false);
-  const { data: auctionsData, startPolling, stopPolling } = useGetAuctions();
-  const [placeBid] = usePlaceBid();
 
   useEffect(() => {
     if (product) {
       setCurrentProduct(product);
       // Check if the product has an active auction
-      if (product.auction && product.auction.status === "active") {
-        const auction = product.auction;
-        setHighestBid(auction.bids?.[0]?.amount || auction.startingPrice);
-        const endTime = new Date(parseInt(auction.endTime, 10));
+      const auction = auctions.find((a) => a.product === product.id);
+      if (auction && auction.status === "active") {
+        setHighestBid(auction.highestBid || auction.startingPrice);
+        const endTime = new Date(auction.endTime);
         setTimeLeft(Math.floor((endTime.getTime() - Date.now()) / 1000));
         setAuctionActive(true);
       }
     }
-  }, [product]);
+  }, [product, auctions]);
 
   useEffect(() => {
     if (timeLeft > 0 && auctionActive) {

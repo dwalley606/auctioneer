@@ -27,7 +27,7 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
   const [createAuction] = useCreateAuction();
   const { product: updatedProduct, refetch } = useGetProductDetails(product.id);
   const auctions = useSelector(selectAuctions);
-  const auction = auctions.find((a) => a.product.id === product.id);
+  const auction = auctions.find((a) => a.product === product.id);
   const [highestBid, setHighestBid] = useState(0);
 
   useEffect(() => {

@@ -9,6 +9,7 @@ import {
   removeFromCart,
   selectCartItems,
 } from "../../redux/cart/cartSlice";
+import { selectAuctions } from "../../redux/auction/auctionSlice";
 import "./ProductList.css";
 import socket from "../../utils/socket";
 
@@ -21,6 +22,7 @@ const ProductList = () => {
   } = useSelector((state) => state.products);
   const { currentCategory } = useSelector((state) => state.categories);
   const cartItems = useSelector(selectCartItems);
+  const auctions = useSelector(selectAuctions);
 
   useEffect(() => {
     console.log("Fetching products...");
@@ -89,65 +91,73 @@ const ProductList = () => {
         <>
           {products && products.length ? (
             <div className="products-grid">
-              {filterProducts().map((product) => (
-                <div key={product.id} className="product-card">
-                  <a href={`/products/${product.id}`}>
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="product-image"
-                      onError={handleImageError}
-                    />
-                  </a>
-                  <div className="product-info">
-                    <h1 className="product-title">{product.name}</h1>
-                    <p className="product-description">
-                      {product.description.slice(0, 40)}...
-                    </p>
-                    <p className="product-price">${product.price}</p>
-                  </div>
-                  <div className="product-actions">
-                    {!cartItems.find((item) => item.id === product.id) ? (
-                      <button
-                        className="product-button"
-                        onClick={() => handleAddToCart(product)}
-                      >
-                        Add to cart
-                      </button>
-                    ) : (
-                      <div className="product-quantity">
+              {filterProducts().map((product) => {
+                const auction = auctions.find((a) => a.product === product.id);
+                return (
+                  <div key={product.id} className="product-card">
+                    <a href={`/products/${product.id}`}>
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="product-image"
+                        onError={handleImageError}
+                      />
+                    </a>
+                    <div className="product-info">
+                      <h1 className="product-title">{product.name}</h1>
+                      <p className="product-description">
+                        {product.description.slice(0, 40)}...
+                      </p>
+                      <p className="product-price">${product.price}</p>
+                      {auction && auction.status === "active" && (
+                        <p className="product-auction">
+                          Auction Active: Highest Bid ${auction.highestBid}
+                        </p>
+                      )}
+                    </div>
+                    <div className="product-actions">
+                      {!cartItems.find((item) => item.id === product.id) ? (
                         <button
                           className="product-button"
                           onClick={() => handleAddToCart(product)}
                         >
-                          +
+                          Add to cart
                         </button>
-                        <p className="product-quantity-text">
-                          {
-                            cartItems.find((item) => item.id === product.id)
-                              .quantity
-                          }
-                        </p>
-                        <button
-                          className="product-button"
-                          onClick={() => {
-                            const cartItem = cartItems.find(
-                              (item) => item.id === product.id
-                            );
-                            if (cartItem.quantity === 1) {
-                              handleRemoveFromCart(product);
-                            } else {
-                              dispatch(removeFromCart(product));
+                      ) : (
+                        <div className="product-quantity">
+                          <button
+                            className="product-button"
+                            onClick={() => handleAddToCart(product)}
+                          >
+                            +
+                          </button>
+                          <p className="product-quantity-text">
+                            {
+                              cartItems.find((item) => item.id === product.id)
+                                .quantity
                             }
-                          }}
-                        >
-                          -
-                        </button>
-                      </div>
-                    )}
+                          </p>
+                          <button
+                            className="product-button"
+                            onClick={() => {
+                              const cartItem = cartItems.find(
+                                (item) => item.id === product.id
+                              );
+                              if (cartItem.quantity === 1) {
+                                handleRemoveFromCart(product);
+                              } else {
+                                dispatch(removeFromCart(product));
+                              }
+                            }}
+                          >
+                            -
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <h3>No products available.</h3>
