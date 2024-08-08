@@ -53,8 +53,29 @@ const resolvers = {
       return actions.getOrders();
     },
     feedbacks: async () => actions.getFeedbacks(),
-    auctions: async () => actions.getAuctions(),
-    bids: async () => actions.getBids(),
+    auctions: async () => {
+      const auctions = await actions.getAuctions();
+      return auctions.map((auction) => ({
+        ...auction,
+        id: auction._id.toString(),
+        product: {
+          ...auction.product,
+          id: auction.product._id.toString(),
+        },
+        startTime: auction.startTime ? auction.startTime.toISOString() : null,
+        endTime: auction.endTime ? auction.endTime.toISOString() : null,
+      }));
+    },
+    bids: async () => {
+      const bids = await actions.getBids();
+      return bids.map((bid) => ({
+        ...bid,
+        id: bid._id.toString(),
+        user: bid.user.toString(),
+        product: bid.product.toString(),
+        timestamp: bid.timestamp.toISOString(),
+      }));
+    },
     payments: async (_, __, context) => {
       if (!context.user)
         throw new AuthenticationError(
@@ -216,20 +237,36 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return actions.createAuction(
+      const auction = await actions.createAuction(
         productId,
         startTime,
         endTime,
         startingPrice,
         status
       );
+
+      // Convert ObjectId fields to string
+      auction.id = auction._id.toString();
+      auction.product = auction.product.toString();
+      auction.startTime = auction.startTime.toISOString();
+      auction.endTime = auction.endTime.toISOString();
+
+      return auction;
     },
     placeBid: async (_, { productId, amount }, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return actions.placeBid(context.user.id, productId, amount);
+      const bid = await actions.placeBid(context.user.id, productId, amount);
+
+      // Convert ObjectId fields to string
+      bid.id = bid._id.toString();
+      bid.user = bid.user.toString();
+      bid.product = bid.product.toString();
+      bid.timestamp = bid.timestamp.toISOString();
+
+      return bid;
     },
     createPayment: async (
       _,
@@ -240,14 +277,31 @@ const resolvers = {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return actions.createPayment(orderId, method, status, transactionId);
+      const payment = await actions.createPayment(
+        orderId,
+        method,
+        status,
+        transactionId
+      );
+
+      // Convert ObjectId fields to string
+      payment.id = payment._id.toString();
+      payment.order = payment.order.toString();
+
+      return payment;
     },
     createNotification: async (_, { userId, message }, context) => {
       if (!context.user)
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return actions.createNotification(userId, message);
+      const notification = await actions.createNotification(userId, message);
+
+      // Convert ObjectId fields to string
+      notification.id = notification._id.toString();
+      notification.user = notification.user.toString();
+
+      return notification;
     },
     updateUserProfile: async (_, { input }, context) => {
       if (!context.user)

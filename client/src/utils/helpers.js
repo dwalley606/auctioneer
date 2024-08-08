@@ -56,3 +56,28 @@ export function idbPromise(storeName, method, object) {
     };
   });
 }
+
+export function formatCurrency(amount) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount);
+}
+
+export function getRemainingTime(endTime) {
+  const currentTime = Date.now();
+  const remainingTime = endTime - currentTime;
+
+  const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+  return {
+    minutes: minutes < 10 ? `0${minutes}` : minutes,
+    seconds: seconds < 10 ? `0${seconds}` : seconds,
+  };
+}
+
+export function convertTimestampToDate(timestamp) {
+  const date = new Date(parseInt(timestamp, 10));
+  return date.toLocaleString();
+}

@@ -106,7 +106,7 @@ export const UPDATE_USER_PROFILE = gql`
   }
 `;
 
-const UPDATE_PRODUCT = gql`
+export const UPDATE_PRODUCT = gql`
   mutation UpdateProduct($id: ID!, $input: UpdateProductInput!) {
     updateProduct(id: $id, input: $input) {
       id
@@ -127,6 +127,34 @@ const UPDATE_PRODUCT = gql`
         id
         username
       }
+    }
+  }
+`;
+
+export const CREATE_AUCTION = gql`
+  mutation CreateAuction(
+    $productId: ID!
+    $startTime: String!
+    $endTime: String!
+    $startingPrice: Float!
+    $status: String!
+  ) {
+    createAuction(
+      productId: $productId
+      startTime: $startTime
+      endTime: $endTime
+      startingPrice: $startingPrice
+      status: $status
+    ) {
+      id
+      product {
+        id
+        name
+      }
+      startTime
+      endTime
+      startingPrice
+      status
     }
   }
 `;
