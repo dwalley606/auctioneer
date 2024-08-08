@@ -13,7 +13,7 @@ const { graphqlUploadExpress } = require("graphql-upload");
 const { typeDefs, resolvers } = require("./schemas");
 const db = require("./config/connection");
 const { signout } = require("./schemas/actions");
-const watchCollection = require("./changeStreams");
+const pollForChanges = require("./polling"); // Import the polling module
 
 dotenv.config();
 
@@ -111,8 +111,8 @@ const startApolloServer = async () => {
         console.log(`API server running on port ${PORT}!`);
         console.log(`Use GraphQL at http://localhost:${PORT}/graphql`);
       });
-      watchCollection(io).catch((err) =>
-        console.error("Failed to watch collection: ", err)
+      pollForChanges(io).catch((err) =>
+        console.error("Failed to poll for changes: ", err)
       );
     });
   } catch (error) {

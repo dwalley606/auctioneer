@@ -9,11 +9,16 @@ const auctionSlice = createSlice({
   initialState,
   reducers: {
     startAuction: (state, action) => {
-      state.auctions.push(action.payload);
+      const auction = {
+        ...action.payload,
+        startTime: new Date(action.payload.startTime).toISOString(), // Serialize Date to string
+        endTime: new Date(action.payload.endTime).toISOString(), // Serialize Date to string
+      };
+      state.auctions.push(auction);
     },
     placeBid: (state, action) => {
       const { productId, bidAmount } = action.payload;
-      const auction = state.auctions.find((a) => a.productId === productId);
+      const auction = state.auctions.find((a) => a.product.id === productId);
       if (auction && bidAmount > auction.highestBid) {
         auction.highestBid = bidAmount;
       }

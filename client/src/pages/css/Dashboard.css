@@ -23,6 +23,9 @@
   flex-grow: 1;
   overflow-y: auto;
   padding: 20px; /* Adjust as needed */
+  display: flex;
+  flex-wrap: wrap; /* Add this to wrap product cards */
+  gap: 20px; /* Add this to give some space between product cards */
 }
 
 /* Additional CSS for adjustments */

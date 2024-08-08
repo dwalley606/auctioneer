@@ -17,6 +17,4 @@ const subcategorySchema = new Schema({
 
 const Subcategory = mongoose.model("Subcategory", subcategorySchema);
 
-Subcategory.watch().on("change", (data) => console.log(new Date(), data));
-
 module.exports = Subcategory;
