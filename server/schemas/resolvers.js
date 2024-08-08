@@ -4,6 +4,7 @@ const {
   UserInputError,
 } = require("apollo-server-express");
 const mongoose = require("mongoose");
+const { Product, User, Category, Subcategory } = require("../models");
 const actions = require("./actions");
 
 const resolvers = {
@@ -163,6 +164,18 @@ const resolvers = {
         };
       } catch (error) {
         console.error("Error in createProduct resolver:", error);
+        throw new ApolloError(error.message, "INTERNAL_SERVER_ERROR", {
+          originalError: error,
+        });
+      }
+    },
+    deleteProduct: async (_, { id }, context) => {
+      if (!context.user) throw new AuthenticationError("Not authenticated");
+      try {
+        const product = await Product.findByIdAndDelete(id);
+        if (!product) throw new Error("Product not found");
+        return product;
+      } catch (error) {
         throw new ApolloError(error.message, "INTERNAL_SERVER_ERROR", {
           originalError: error,
         });

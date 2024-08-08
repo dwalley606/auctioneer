@@ -163,6 +163,7 @@ const typeDefs = gql`
     ): Payment
     createNotification(userId: ID!, message: String!): Notification
     updateUserProfile(input: UpdateUserProfileInput!): User
+    deleteProduct(id: ID!): Product
   }
 `;
 

@@ -105,3 +105,28 @@ export const UPDATE_USER_PROFILE = gql`
     }
   }
 `;
+
+const UPDATE_PRODUCT = gql`
+  mutation UpdateProduct($id: ID!, $input: UpdateProductInput!) {
+    updateProduct(id: $id, input: $input) {
+      id
+      name
+      description
+      image
+      quantity
+      price
+      category {
+        id
+        name
+      }
+      subcategory {
+        id
+        name
+      }
+      seller {
+        id
+        username
+      }
+    }
+  }
+`;
