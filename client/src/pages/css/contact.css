@@ -40,7 +40,7 @@ margin-bottom: 10px;
 }
 
 .contact-container input {
-  width: 100%;
+  width: auto;
   padding: 10px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
@@ -49,7 +49,7 @@ margin-bottom: 10px;
 }
 
 .contact-container button {
-  width: 100%;
+  width: auto;
   padding: 10px;
   background-color: lightgray;
   color: black;
@@ -75,3 +75,64 @@ margin-bottom: 10px;
   font-size: 14px;
   margin-top: 5px;
 }
+
+.button {
+  width: auto;
+  padding: 10px;
+  background-color: lightgray;
+  color: black;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.button:hover {
+  background-color: #ccc;
+}
+
+h1 {
+  text-align: center;
+  margin-top: 15px;
+  margin-bottom: 20px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 50px;
+
+}
+
+p {
+  text-align: center;
+  margin-top: 30px;
+  margin-bottom: 40px;
+  font-size: large;
+}
+
+.questionForm {
+  display: flex;
+  flex-direction: column;
+  margin-top: 15px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-size: larger;
+}
+
+.questionForm input 
+ textarea {
+  width: auto;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: large;
+}
+
+.questionForm button {
+  width: auto;
+  padding: 10px;
+  background-color: lightgray;
+  color: black;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 5px;
+}
+
