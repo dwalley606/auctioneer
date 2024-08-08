@@ -24,7 +24,7 @@ const AuctionDetails = ({ values, handleChange, nextStep, prevStep }) => {
         <h3>Enter Auction Details</h3>
         <TextField
           placeholder="Enter Starting Price"
-          label="Starting Price"
+          // label="Starting Price"
           onChange={handleChange("startingPrice")}
           defaultValue={values.startingPrice}
           margin="normal"
@@ -32,7 +32,7 @@ const AuctionDetails = ({ values, handleChange, nextStep, prevStep }) => {
         />
         <TextField
           placeholder="Enter Start Time"
-          label="Start Time"
+          // label="Start Time"
           type="datetime-local"
           onChange={handleChange("startTime")}
           defaultValue={values.startTime}
@@ -41,7 +41,7 @@ const AuctionDetails = ({ values, handleChange, nextStep, prevStep }) => {
         />
         <TextField
           placeholder="Enter End Time"
-          label="End Time"
+          // label="End Time"
           type="datetime-local"
           onChange={handleChange("endTime")}
           defaultValue={values.endTime}

@@ -53,6 +53,14 @@ const CREATE_PRODUCT = gql`
   }
 `;
 
+const DELETE_PRODUCT = gql`
+  mutation DeleteProduct($id: ID!) {
+    deleteProduct(id: $id) {
+      id
+    }
+  }
+`;
+
 const initialState = {
   items: [],
   loading: false,
@@ -118,6 +126,59 @@ export const createProduct = createAsyncThunk(
   }
 );
 
+export const deleteProduct = createAsyncThunk(
+  "products/deleteProduct",
+  async (id, { rejectWithValue }) => {
+    try {
+      await client.mutate({
+        mutation: DELETE_PRODUCT,
+        variables: { id },
+        context: {
+          headers: getAuthHeaders(),
+        },
+      });
+      return id;
+    } catch (error) {
+      console.error("Error in deleteProduct thunk:", error);
+      return rejectWithValue(
+        error.message || "An error occurred while deleting the product"
+      );
+    }
+  }
+);
+
+export const updateProduct = createAsyncThunk(
+  "products/updateProduct",
+  async ({ id, productData }, { rejectWithValue }) => {
+    try {
+      const input = {
+        name: productData.name,
+        description: productData.description,
+        price: parseFloat(productData.price),
+        quantity: parseInt(productData.quantity, 10),
+        categoryId: productData.categoryId,
+        subcategoryId: productData.subcategoryId,
+        image: productData.image,
+      };
+
+      const response = await client.mutate({
+        mutation: UPDATE_PRODUCT,
+        variables: { id, input },
+        context: {
+          headers: getAuthHeaders(),
+        },
+      });
+
+      return response.data.updateProduct;
+    } catch (error) {
+      console.error("Error in updateProduct thunk:", error);
+      return rejectWithValue(
+        error.message || "An error occurred while updating the product"
+      );
+    }
+  }
+);
+
 const productsSlice = createSlice({
   name: "products",
   initialState,
@@ -145,6 +206,37 @@ const productsSlice = createSlice({
         state.items.push(action.payload);
       })
       .addCase(createProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(deleteProduct.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = state.items.filter(
+          (product) => product.id !== action.payload
+        );
+      })
+      .addCase(deleteProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateProduct.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.items.findIndex(
+          (product) => product.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+      })
+      .addCase(updateProduct.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

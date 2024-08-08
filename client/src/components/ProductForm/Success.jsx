@@ -3,11 +3,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Dialog from "@mui/material/Dialog";
 import AppBar from "@mui/material/AppBar";
-import { createProduct } from "../../redux/products/productsSlice";
+import {
+  createProduct
+} from "../../redux/products/productsSlice";
+import { startAuction } from "../../redux/auction/auctionSlice";
+
 
 const theme = createTheme();
 
-const Success = ({ values }) => {
+const Success = ({ values, auctionData, isAuction }) => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
 
@@ -28,13 +32,28 @@ const Success = ({ values }) => {
 
         const result = await dispatch(createProduct(productData)).unwrap();
         console.log("Product created successfully:", result);
+
+        if (isAuction) {
+          const auctionDataToSend = {
+            product: result._id,
+            startTime: auctionData.startTime,
+            endTime: auctionData.endTime,
+            startingPrice: parseFloat(auctionData.startingPrice),
+            status: "active",
+          };
+
+          const auctionResult = await dispatch(
+            startAuction(auctionDataToSend)
+          ).unwrap();
+          console.log("Auction created successfully:", auctionResult);
+        }
       } catch (error) {
         console.error("Error creating product:", error);
       }
     };
 
     submitProduct();
-  }, [dispatch, values, currentUser]);
+  }, [dispatch, values, auctionData, isAuction, currentUser]);
 
   return (
     <ThemeProvider theme={theme}>

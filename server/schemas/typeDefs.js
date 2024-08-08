@@ -153,7 +153,7 @@ const typeDefs = gql`
       endTime: String!
       startingPrice: Float!
       status: String!
-    ): Auction
+    ): Auction!
     placeBid(productId: ID!, amount: Float!): Bid
     createPayment(
       orderId: ID!
@@ -163,6 +163,7 @@ const typeDefs = gql`
     ): Payment
     createNotification(userId: ID!, message: String!): Notification
     updateUserProfile(input: UpdateUserProfileInput!): User
+    deleteProduct(id: ID!): Product
   }
 `;
 

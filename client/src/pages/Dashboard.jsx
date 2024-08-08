@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import DashComponent from "../components/Dashboard/Component/DashComponent";
 import DashProfile from "../components/Dashboard/Profile/DashProfile";
-import DashProducts from "../components/Dashboard/Products/DashProducts";
+import DashProducts from "../components/Dashboard/Products/Products";
 import DashMessages from "../components/Dashboard/Messages/DashMessages";
 import Topbar from "../components/Dashboard/Topbar/Topbar";
 import "./css/Dashboard.css";
