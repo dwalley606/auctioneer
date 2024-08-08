@@ -11,7 +11,7 @@ import {
   signInSuccess,
   signInFailure,
 } from "../redux/user/userSlice";
-import "./css/Login.css";
+import "./css/Signup.css";
 
 function Login() {
   const [formState, setFormState] = useState({ email: "", password: "" });
@@ -51,10 +51,10 @@ function Login() {
   };
 
   return (
-    <div className="login">
+    <div className="container my-1">
       <form onSubmit={handleFormSubmit}>
-        <h2 className="title">Login</h2>
-        <div className="input-group">
+        <h2>Login</h2>
+        <div className="flex-row space-between my-2">
           <Label htmlFor="email" className="label">
             Email
           </Label>
@@ -70,7 +70,7 @@ function Login() {
             className="input"
           />
         </div>
-        <div className="input-group">
+        <div className="flex-row space-between my-2">
           <Label htmlFor="password" className="label">
             Password
           </Label>
@@ -93,8 +93,8 @@ function Login() {
         <Button type="submit" disabled={loading}>
           {loading ? <Spinner /> : "Login"}
         </Button>
-      </form>
       <OAuth />
+      </form>
       <div className="footer">
         <p>
           Don't have an account? <Link to="/signup">Sign up</Link>
