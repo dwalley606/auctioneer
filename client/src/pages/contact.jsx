@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import './css/contact.css';
+import './css/contact.css';  
 
     const Contact = () => {
         const [email, setEmail] = useState('');
