@@ -258,6 +258,11 @@ const Nav = () => {
                 Contact
               </Link>
             </li>
+            <li className="menu-category" key="list-item">
+              <Link to="/posting" className="menu-title">
+                List an Item
+              </Link>
+            </li>
           </ul>
         </div>
       </nav>

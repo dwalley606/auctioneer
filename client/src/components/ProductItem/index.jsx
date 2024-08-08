@@ -4,12 +4,18 @@ import { Link, useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { addToCart, selectCartItems } from "../../redux/cart/cartSlice";
+import {
+  startAuction,
+  placeBid,
+  selectAuctions,
+} from "../../redux/auction/auctionSlice";
 import { pluralize } from "../../utils/helpers";
 import {
   useGetProductDetails,
   usePlaceBid,
   useGetAuctions,
 } from "../../utils/actions";
+import socket from "../../utils/socket";
 import "./ProductItem.css";
 
 const ProductItem = () => {
@@ -17,11 +23,12 @@ const ProductItem = () => {
   console.log("Product ID:", id);
 
   const { product, loading, error, refetch } = useGetProductDetails(id);
-
-  console.log("Product data:", product);
+  const [currentProduct, setCurrentProduct] = useState(null);
 
   const dispatch = useDispatch();
   const cart = useSelector(selectCartItems);
+  const auctions = useSelector(selectAuctions);
+
   const [bidAmount, setBidAmount] = useState(0);
   const [highestBid, setHighestBid] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -31,14 +38,23 @@ const ProductItem = () => {
   const [placeBid] = usePlaceBid();
 
   useEffect(() => {
-    console.log("Starting auction polling");
-    startPolling(1000);
+    if (product) {
+      setCurrentProduct(product);
+      console.log("Product data set:", product);
+    }
+  }, [product]);
 
-    return () => {
-      console.log("Stopping auction polling");
-      stopPolling();
-    };
-  }, [startPolling, stopPolling]);
+  useEffect(() => {
+    if (auctionActive) {
+      console.log("Starting auction polling");
+      startPolling(1000);
+
+      return () => {
+        console.log("Stopping auction polling");
+        stopPolling();
+      };
+    }
+  }, [auctionActive, startPolling, stopPolling]);
 
   useEffect(() => {
     if (auctionsData) {
@@ -59,30 +75,81 @@ const ProductItem = () => {
     }
   }, [auctionsData, id]);
 
+  useEffect(() => {
+    if (timeLeft > 0 && auctionActive) {
+      const timer = setInterval(() => {
+        setTimeLeft((prevTime) => prevTime - 1);
+      }, 1000);
+
+      return () => clearInterval(timer);
+    } else if (timeLeft <= 0 && auctionActive) {
+      console.log("Auction ended");
+      setAuctionActive(false);
+      const auction = auctionsData.auctions.find((a) => a.product.id === id);
+      if (auction) {
+        const highestBid = auction.bids.reduce(
+          (max, bid) => (bid.amount > max.amount ? bid : max),
+          { amount: 0 }
+        );
+        console.log("Highest bid:", highestBid);
+        toast.success(
+          `Auction ended. Highest bid: $${highestBid.amount} by ${highestBid.user.username}`,
+          {
+            position: "top-center",
+            autoClose: 2000,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "colored",
+          }
+        );
+      }
+    }
+  }, [timeLeft, auctionActive, auctionsData, id]);
+
+  useEffect(() => {
+    const handleBidChange = async (change) => {
+      console.log("Bid change detected:", change);
+      if (change.documentKey._id.toString() === id) {
+        console.log("Matching product ID, refetching data...");
+        try {
+          const { data } = await refetch();
+          console.log("Data refetched after change:", data.product);
+          setCurrentProduct(data.product);
+        } catch (err) {
+          console.error("Error during refetch:", err);
+        }
+      }
+    };
+
+    socket.on("bidChange", handleBidChange);
+
+    return () => {
+      socket.off("bidChange", handleBidChange);
+    };
+  }, [id, refetch]);
+
   const addToCartHandler = () => {
-    console.log("Adding to cart:", product);
+    console.log("Adding to cart:", currentProduct);
     const itemInCart = cart.find((cartItem) => cartItem.id === id);
     if (itemInCart) {
-      dispatch(addToCart({ ...product, quantity: itemInCart.quantity + 1 }));
+      dispatch(
+        addToCart({ ...currentProduct, quantity: itemInCart.quantity + 1 })
+      );
     } else {
-      dispatch(addToCart({ ...product, quantity: 1 }));
+      dispatch(addToCart({ ...currentProduct, quantity: 1 }));
     }
-    notifyAddedToCart(product);
+    notifyAddedToCart(currentProduct);
   };
 
   const notifyAddedToCart = (item) => {
-    toast.success(`${item.title} added to cart!`, {
+    toast.success(`${item.name} added to cart!`, {
       position: "top-center",
       autoClose: 2000,
-      hideProgressBar: true,
       closeOnClick: true,
       pauseOnHover: true,
       draggable: true,
       theme: "colored",
-      style: {
-        backgroundColor: "#fff",
-        color: "#000",
-      },
     });
   };
 
@@ -106,30 +173,21 @@ const ProductItem = () => {
         toast.success(`New highest bid: $${bidAmount}`, {
           position: "top-center",
           autoClose: 2000,
-          hideProgressBar: true,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
           theme: "colored",
-          style: {
-            backgroundColor: "#fff",
-            color: "#000",
-          },
         });
+        dispatch(placeBid({ productId: id, bidAmount }));
       } catch (error) {
         console.error("Error placing bid:", error);
         toast.error(`Error placing bid: ${error.message}`, {
           position: "top-center",
           autoClose: 2000,
-          hideProgressBar: true,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
           theme: "colored",
-          style: {
-            backgroundColor: "#000",
-            color: "#fff",
-          },
         });
       }
     } else {
@@ -137,17 +195,32 @@ const ProductItem = () => {
       toast.error(`Bid must be higher than $${highestBid}`, {
         position: "top-center",
         autoClose: 2000,
-        hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
         theme: "colored",
-        style: {
-          backgroundColor: "#000",
-          color: "#fff",
-        },
       });
     }
+  };
+
+  const startAuctionHandler = (startingPrice, duration) => {
+    console.log(
+      "Starting auction with price:",
+      startingPrice,
+      "and duration:",
+      duration
+    );
+    setHighestBid(startingPrice);
+    setTimeLeft(duration);
+    setAuctionActive(true);
+    const auction = {
+      productId: id,
+      startingPrice,
+      endTime: new Date(Date.now() + duration * 1000).toISOString(),
+      bids: [],
+      status: "active",
+    };
+    dispatch(startAuction(auction));
   };
 
   if (loading) return <div>Loading...</div>;
@@ -156,7 +229,7 @@ const ProductItem = () => {
     return <div>Error: {error.message}</div>;
   }
 
-  if (!product) {
+  if (!currentProduct) {
     console.log("Product not found");
     return (
       <div className="product-not-found">
@@ -167,7 +240,7 @@ const ProductItem = () => {
     );
   }
 
-  console.log("Rendering product:", product);
+  console.log("Rendering product:", currentProduct);
 
   return (
     <div className="product-detail-container">
@@ -175,18 +248,21 @@ const ProductItem = () => {
       <div className="product-detail-card">
         <Link to={`/products/${id}`}>
           <img
-            src={product.image}
-            alt={product.title}
+            src={currentProduct.image}
+            alt={currentProduct.name}
             className="product-detail-image"
           />
         </Link>
         <div className="product-detail-info">
-          <h1 className="product-detail-title">{product.title}</h1>
-          <p className="product-detail-description">{product.description}</p>
-          <p className="product-detail-price">${product.price}</p>
+          <h1 className="product-detail-title">{currentProduct.name}</h1>
+          <p className="product-detail-description">
+            {currentProduct.description}
+          </p>
+          <p className="product-detail-price">${currentProduct.price}</p>
           <div>
             <div>
-              {product.quantity} {pluralize("item", product.quantity)} in stock
+              {currentProduct.quantity}{" "}
+              {pluralize("item", currentProduct.quantity)} in stock
             </div>
           </div>
           <button className="product-detail-button" onClick={addToCartHandler}>
@@ -220,7 +296,7 @@ const ProductItem = () => {
                 value={timeLeft}
                 onChange={(e) => setTimeLeft(parseInt(e.target.value) || 0)}
               />
-              <button onClick={() => startAuction(bidAmount, timeLeft)}>
+              <button onClick={() => startAuctionHandler(bidAmount, timeLeft)}>
                 Start Auction
               </button>
             </div>

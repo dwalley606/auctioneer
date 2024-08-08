@@ -1,5 +1,5 @@
-import React from "react";
-import { Outlet } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import {
   ApolloClient,
   InMemoryCache,
@@ -8,8 +8,9 @@ import {
 } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 import Nav from "./components/Nav/index";
+import socket from "./utils/socket";
+import AuthService from "./utils/auth";
 
-// Define the GraphQL endpoint
 const GRAPHQL_URI =
   import.meta.env.VITE_GRAPHQL_URI || "http://localhost:3001/graphql";
 
@@ -17,12 +18,10 @@ const httpLink = createHttpLink({
   uri: GRAPHQL_URI,
 });
 
-// Function to get the token from localStorage
-const getToken = () => localStorage.getItem("id_token");
-
-// Auth link to include the token in the headers
 const authLink = setContext((_, { headers }) => {
-  const token = getToken();
+  const token = AuthService.getToken();
+    console.log("Token being sent:", token);
+
   return {
     headers: {
       ...headers,
@@ -31,19 +30,16 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
-// Configure the cache
 const cache = new InMemoryCache({
   typePolicies: {
     Query: {
       fields: {
         product: {
-          // Merge function for individual products
           merge(existing, incoming) {
             return incoming;
           },
         },
         auctions: {
-          // Merge function for auctions
           merge(existing = [], incoming) {
             return [...existing, ...incoming];
           },
@@ -53,7 +49,6 @@ const cache = new InMemoryCache({
   },
 });
 
-// Apollo Client instance
 const client = new ApolloClient({
   link: authLink.concat(httpLink),
   cache,
@@ -70,13 +65,47 @@ const client = new ApolloClient({
 });
 
 function App() {
+  const location = useLocation();
+  const hideNavRoutes = ["/posting", "/dashboard"];
+
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Connected to Socket.IO server");
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from Socket.IO server");
+    });
+
+    socket.on("bidChange", (data) => {
+      console.log("Received bidChange event:", data);
+    });
+
+    return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("bidChange");
+    };
+  }, []);
+
+  useEffect(() => {
+    const checkTokenValidity = () => {
+      const token = AuthService.getToken();
+      if (token && AuthService.isTokenExpired(token)) {
+        AuthService.logout();
+      }
+    };
+
+    checkTokenValidity();
+  }, [location]);
+
   return (
     <ApolloProvider client={client}>
-      <Nav />
+      {!hideNavRoutes.includes(location.pathname) && <Nav />}
       <Outlet />
     </ApolloProvider>
   );
 }
 
-export { client }; // Export the client
+export { client, socket };
 export default App;

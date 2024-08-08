@@ -1,14 +1,18 @@
-import React from 'react';
+import React from "react";
 import { Button } from "flowbite-react";
 import { AiFillGoogleCircle } from "react-icons/ai";
 import { signInWithPopup } from "firebase/auth";
 import { useDispatch } from "react-redux";
-import { signInStart, signInSuccess, signInFailure } from "../../redux/user/userSlice";
 import { useNavigate } from "react-router-dom";
-import { setToken } from "../../utils/auth";
 import { useMutation } from "@apollo/client";
 import { GOOGLE_SIGN_IN } from "../../utils/mutations";
-import { auth, googleProvider } from '../../firebase/config';
+import { auth, googleProvider } from "../../firebase/config";
+import {
+  signInStart,
+  googleSignInSuccess,
+  signInFailure,
+} from "../../redux/user/userSlice";
+import AuthService, { setToken } from "../../utils/auth";
 
 export default function OAuth() {
   const dispatch = useDispatch();
@@ -25,7 +29,7 @@ export default function OAuth() {
       console.log("Google Sign-In successful");
 
       const idToken = await resultsFromGoogle.user.getIdToken();
-      console.log("ID Token obtained");
+      console.log("ID Token obtained:", idToken);
 
       const { email, displayName, photoURL, uid } = resultsFromGoogle.user;
 
@@ -49,25 +53,18 @@ export default function OAuth() {
 
       if (data?.googleSignIn?.token) {
         console.log("Sign-in successful, token received");
-        setToken(data.googleSignIn.token, null); // Assuming you don't have refresh token yet
-        console.log("Token saved to localStorage:", data.googleSignIn.token); // Log token
-        dispatch(signInSuccess(data.googleSignIn.user));
+        setToken(data.googleSignIn.token);
+        console.log("Token saved to localStorage:", data.googleSignIn.token);
+        dispatch(googleSignInSuccess(data.googleSignIn.user));
         navigate("/");
       } else {
         console.error("No token received from server");
         throw new Error("Authentication failed: No token received");
       }
     } catch (error) {
-  console.error("Google sign-in error:", error);
-  if (error.graphQLErrors) {
-    console.error("GraphQL errors:", error.graphQLErrors);
-  }
-  if (error.networkError) {
-    console.error("Network error:", error.networkError);
-  }
-  dispatch(signInFailure(error.message || "An unknown error occurred"));
-}
-
+      console.error("Google sign-in error:", error);
+      dispatch(signInFailure(error.message || "An unknown error occurred"));
+    }
   };
 
   return (

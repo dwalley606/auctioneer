@@ -1,0 +1,47 @@
+.product-details-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 800px;
+  margin: auto;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.box-form-section {
+
+}
+
+.image-upload-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: auto;
+  cursor: pointer;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.image-upload-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
