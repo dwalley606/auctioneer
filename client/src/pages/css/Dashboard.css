@@ -1,27 +1,111 @@
-
-.Auction {
+/* Dashboard.css */
+.dashboard-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 20px;
-  width: 100%;
-  height: 100%;
-  background-color: lightgray;
-    border-radius: 10px;
-    font-size: large;
-
+  height: 100vh;
 }
 
-.currentBids {
+.dashboard-header {
+  flex-shrink: 0;
+}
+
+.dashboard-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dashboard-sidebar {
+  flex-shrink: 0;
+}
+
+.dashboard-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 20px; /* Adjust as needed */
+}
+
+/* Additional CSS for adjustments */
+.avatar-image {
+  width: 80px;
+  height: 80px;
+}
+
+.profile-container {
+  max-width: 600px;
+  margin: auto;
+  padding: 16px;
+  width: 100%;
+}
+
+.profile-header {
+  margin-top: 28px;
+  margin-bottom: 28px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 24px;
+}
+
+.profile-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 20px;
+  gap: 16px;
+}
+
+.profile-avatar-container {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  margin: auto;
+  cursor: pointer;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.profile-avatar {
   width: 100%;
   height: 100%;
-  background-color: lightgray;
-  border-radius: 10px;
-font-size: large;
+  object-fit: cover;
+  border: 8px solid lightgray;
+}
+
+.profile-avatar-uploading {
+  opacity: 0.6;
+}
+
+.profile-footer {
+  color: red;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.profile-footer-link {
+  cursor: pointer;
+}
+
+.profile-alert {
+  margin-top: 20px;
+}
+
+.modal-icon {
+  height: 56px;
+  width: 56px;
+  color: gray;
+  margin-bottom: 16px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.modal-header {
+  margin-bottom: 20px;
+  font-size: 18px;
+  color: gray;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
 }

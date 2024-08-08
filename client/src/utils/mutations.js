@@ -25,33 +25,33 @@ export const SIGNUP_USER = gql`
 `;
 
 export const CREATE_PRODUCT = gql`
-  mutation CreateProduct(
-    $name: String!
-    $description: String!
-    $price: Float!
-    $categoryId: ID!
-  ) {
-    createProduct(
-      name: $name
-      description: $description
-      price: $price
-      categoryId: $categoryId
-    ) {
+  mutation CreateProduct($input: CreateProductInput!) {
+    createProduct(input: $input) {
       id
       name
       description
+      image
+      quantity
       price
       category {
         id
         name
       }
+      subcategory {
+        id
+        name
+      }
+      seller {
+        id
+        username
+      }
     }
   }
 `;
 
-export const CREATE_BID = gql`
-  mutation CreateBid($productId: ID!, $amount: Float!) {
-    createBid(productId: $productId, amount: $amount) {
+export const PLACE_BID = gql`
+  mutation PlaceBid($productId: ID!, $amount: Float!) {
+    placeBid(productId: $productId, amount: $amount) {
       id
       user {
         id
@@ -68,8 +68,8 @@ export const CREATE_BID = gql`
 `;
 
 export const CREATE_ORDER = gql`
-  mutation CreateOrder($productId: ID!) {
-    createOrder(productId: $productId) {
+  mutation CreateOrder($productId: ID!, $amount: Float!) {
+    createOrder(productId: $productId, amount: $amount) {
       id
       product {
         id
@@ -193,6 +193,17 @@ export const GOOGLE_SIGN_IN = gql`
         email
         photoUrl
       }
+    }
+  }
+`;
+
+export const UPDATE_USER_PROFILE = gql`
+  mutation UpdateUserProfile($input: UpdateUserProfileInput!) {
+    updateUserProfile(input: $input) {
+      id
+      username
+      email
+      photoUrl
     }
   }
 `;

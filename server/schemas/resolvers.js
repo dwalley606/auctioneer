@@ -1,6 +1,10 @@
-const { AuthenticationError } = require("apollo-server-express");
+const {
+  AuthenticationError,
+  ApolloError,
+  UserInputError,
+} = require("apollo-server-express");
+const mongoose = require("mongoose");
 const actions = require("./actions");
-const { Auction, Product, Category, User } = require("../models");
 
 const resolvers = {
   Query: {
@@ -22,7 +26,7 @@ const resolvers = {
       return actions.getOrders();
     },
     feedbacks: async () => actions.getFeedbacks(),
-    auctions: async () => Auction.find().populate("product"),
+    auctions: async () => actions.getAuctions(),
     bids: async () => actions.getBids(),
     payments: async (_, __, context) => {
       if (!context.user)
@@ -39,58 +43,56 @@ const resolvers = {
       return actions.getNotifications();
     },
     product: async (_, { id }) => {
-      try {
-        console.log("Fetching product with ID:", id);
-        const product = await Product.findById(id)
-          .populate("category")
-          .populate("seller")
-          .populate({
-            path: "auction",
-            populate: {
-              path: "bids",
-            },
-          });
-
-        if (!product) {
-          console.log("Product not found");
-          throw new Error("Product not found");
-        }
-
-        // Ensure auction field is null if no auction exists
-        if (!product.auction) {
-          product.auction = null;
-        }
-
-        console.log("Product found:", product);
-        return product;
-      } catch (error) {
-        console.error("Error fetching product:", error);
-        throw new Error("Error fetching product");
-      }
+      const product = await actions.getProductById(id);
+      if (!product) throw new Error("Product not found");
+      return product;
     },
   },
   Mutation: {
     signup: async (_, { username, email, password }) =>
       actions.signup(username, email, password),
     login: async (_, { email, password }) => actions.login(email, password),
-    googleSignIn: async (parent, { input }) => actions.googleSignIn(input),
-    createProduct: async (
-      _,
-      { name, description, quantity, price, categoryId },
-      context
-    ) => {
-      if (!context.user)
+    googleSignIn: async (_, { input }) => actions.googleSignIn(input),
+    createProduct: async (_, { input }, context) => {
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return actions.createProduct(
-        name,
-        description,
-        quantity,
-        price,
-        categoryId,
-        context.user.id
-      );
+      }
+
+      console.log("Resolver received:", input);
+
+      // Validate input
+      if (
+        !input.name ||
+        !input.description ||
+        !input.quantity ||
+        !input.price ||
+        !input.categoryId ||
+        !input.subcategoryId ||
+        !input.image ||
+        !input.sellerId
+      ) {
+        throw new UserInputError("All fields are required");
+      }
+
+      try {
+        const product = await actions.createProduct({
+          ...input,
+          categoryId: new mongoose.Types.ObjectId(input.categoryId),
+          subcategoryId: new mongoose.Types.ObjectId(input.subcategoryId),
+          sellerId: new mongoose.Types.ObjectId(input.sellerId),
+        });
+
+        console.log("Product created:", product);
+
+        return product;
+      } catch (error) {
+        console.error("Error in createProduct resolver:", error);
+        throw new ApolloError(error.message, "INTERNAL_SERVER_ERROR", {
+          originalError: error,
+        });
+      }
     },
     createCategory: async (_, { name }, context) => {
       if (!context.user)
@@ -160,6 +162,13 @@ const resolvers = {
         );
       return actions.createNotification(userId, message);
     },
+    updateUserProfile: async (_, { input }, context) => {
+      if (!context.user)
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
+      return actions.updateUserProfile(context.user.id, input);
+    },
   },
   Category: {
     subcategories: async (parent) => parent.subcategories,
@@ -167,7 +176,7 @@ const resolvers = {
   Auction: {
     product: async (parent) => {
       if (!parent.product) return null;
-      return Product.findById(parent.product);
+      return actions.getProductById(parent.product);
     },
   },
 };
