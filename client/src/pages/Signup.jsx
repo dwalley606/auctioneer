@@ -52,7 +52,7 @@ function Signup() {
 
       console.log("Signup response data:", data);
       const token = data.signup.token;
-      AuthService.login(token, null); // Assuming you don't have refresh token yet
+      AuthService.login(token); // Assuming you don't have refresh token yet
       dispatch(signInSuccess(data.signup.user));
       navigate("/");
     } catch (e) {
