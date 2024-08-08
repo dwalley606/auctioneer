@@ -32,6 +32,7 @@ const signup = async (username, email, password) => {
 };
 
 const login = async (email, password) => {
+  console.log("Login called with:", { email, password });
   const user = await User.findOne({ email });
   if (!user) throw new Error("Invalid credentials");
 
