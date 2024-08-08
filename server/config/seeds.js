@@ -72,37 +72,68 @@ db.once("open", async () => {
     );
 
     const categoryMapping = {
-      beauty: "Clothing, Shoes & Accessories",
-      fragrances: "Clothing, Shoes & Accessories",
-      furniture: "Toys & Hobbies",
-      groceries: "Toys & Hobbies",
-      "home-improvement": "Toys & Hobbies",
+      beauty: {
+        category: "Clothing, Shoes & Accessories",
+        subcategory: "Men's Clothing",
+      },
+      fragrances: {
+        category: "Clothing, Shoes & Accessories",
+        subcategory: "Women's Clothing",
+      },
+      furniture: {
+        category: "Toys & Hobbies",
+        subcategory: "Indoor",
+      },
+      groceries: {
+        category: "Toys & Hobbies",
+        subcategory: "Outdoor",
+      },
+      "home-improvement": {
+        category: "Toys & Hobbies",
+        subcategory: "Outdoor",
+      },
     };
 
-    const findCategoryByName = (name) => {
-      const categoryName = categoryMapping[name.toLowerCase()];
+    const findCategoryAndSubcategoryByName = (name) => {
+      const mapping = categoryMapping[name.toLowerCase()];
+      if (!mapping) return { categoryId: null, subcategoryId: null };
+
       const category = categories.find(
-        (cat) => cat.name.toLowerCase() === categoryName.toLowerCase()
+        (cat) => cat.name.toLowerCase() === mapping.category.toLowerCase()
       );
-      return category ? category._id : null;
+      if (!category) return { categoryId: null, subcategoryId: null };
+
+      const subcategory = category.subcategories.find(
+        (subcat) =>
+          subcat.name.toLowerCase() === mapping.subcategory.toLowerCase()
+      );
+      return {
+        categoryId: category._id.toString(),
+        subcategoryId: subcategory ? subcategory._id.toString() : null,
+      };
     };
 
     const products = mockProducts.products
       .map((product, index) => {
-        const categoryId = findCategoryByName(product.category);
-        if (!categoryId) {
-          console.error(`Category not found for product: ${product.title}`);
+        const { categoryId, subcategoryId } = findCategoryAndSubcategoryByName(
+          product.category
+        );
+        if (!categoryId || !subcategoryId) {
+          console.error(
+            `Category or Subcategory not found for product: ${product.title}`
+          );
           return null;
         }
         return {
           id: product.id,
           name: product.title,
           category: categoryId,
+          subcategory: subcategoryId,
           description: product.description,
           image: product.thumbnail,
           price: product.price,
           quantity: product.stock,
-          seller: users[index % users.length]._id,
+          seller: users[index % users.length]._id.toString(),
         };
       })
       .filter((product) => product !== null);

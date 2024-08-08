@@ -15,9 +15,35 @@ const resolvers = {
         );
       return actions.getUsers();
     },
-    products: async () => actions.getProducts(),
+    products: async () => {
+      const products = await actions.getProducts();
+      return products.map((product) => ({
+        ...product,
+        id: product._id.toString(),
+        category: {
+          ...product.category,
+          id: product.category._id.toString(),
+        },
+        subcategory: product.subcategory
+          ? {
+              ...product.subcategory,
+              id: product.subcategory._id.toString(),
+            }
+          : null,
+        seller: {
+          ...product.seller,
+          id: product.seller._id.toString(),
+        },
+      }));
+    },
     categories: async () => actions.getCategories(),
-    category: async (_, { id }) => actions.getCategoryById(id),
+    category: async (_, { id }) => {
+      const category = await actions.getCategoryById(id);
+      return {
+        ...category,
+        id: category._id.toString(),
+      };
+    },
     orders: async (_, __, context) => {
       if (!context.user)
         throw new AuthenticationError(
@@ -45,7 +71,24 @@ const resolvers = {
     product: async (_, { id }) => {
       const product = await actions.getProductById(id);
       if (!product) throw new Error("Product not found");
-      return product;
+      return {
+        ...product,
+        id: product._id.toString(),
+        category: {
+          ...product.category,
+          id: product.category._id.toString(),
+        },
+        subcategory: product.subcategory
+          ? {
+              ...product.subcategory,
+              id: product.subcategory._id.toString(),
+            }
+          : null,
+        seller: {
+          ...product.seller,
+          id: product.seller._id.toString(),
+        },
+      };
     },
   },
   Mutation: {
@@ -77,16 +120,47 @@ const resolvers = {
       }
 
       try {
-        const product = await actions.createProduct({
+        // Ensure ObjectId instances
+        const productData = {
           ...input,
           categoryId: new mongoose.Types.ObjectId(input.categoryId),
           subcategoryId: new mongoose.Types.ObjectId(input.subcategoryId),
           sellerId: new mongoose.Types.ObjectId(input.sellerId),
-        });
+        };
 
-        console.log("Product created:", product);
+        const createdProduct = await actions.createProduct(productData);
 
-        return product;
+        // Fetch the newly created product to populate references
+        const populatedProduct = await actions.getProductById(
+          createdProduct._id
+        );
+
+        if (!populatedProduct) {
+          throw new Error("Product not found after creation");
+        }
+
+        return {
+          ...populatedProduct,
+          id: populatedProduct._id.toString(),
+          category: populatedProduct.category
+            ? {
+                ...populatedProduct.category,
+                id: populatedProduct.category._id.toString(),
+              }
+            : null,
+          subcategory: populatedProduct.subcategory
+            ? {
+                ...populatedProduct.subcategory,
+                id: populatedProduct.subcategory._id.toString(),
+              }
+            : null,
+          seller: populatedProduct.seller
+            ? {
+                ...populatedProduct.seller,
+                id: populatedProduct.seller._id.toString(),
+              }
+            : null,
+        };
       } catch (error) {
         console.error("Error in createProduct resolver:", error);
         throw new ApolloError(error.message, "INTERNAL_SERVER_ERROR", {
@@ -176,7 +250,11 @@ const resolvers = {
   Auction: {
     product: async (parent) => {
       if (!parent.product) return null;
-      return actions.getProductById(parent.product);
+      const product = await actions.getProductById(parent.product);
+      return {
+        ...product,
+        id: product._id.toString(),
+      };
     },
   },
 };

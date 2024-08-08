@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
 const { ApolloError } = require("apollo-server-express");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+
 const User = require("../models/User");
 const Product = require("../models/Product");
 const Category = require("../models/Category");
@@ -10,8 +13,6 @@ const Auction = require("../models/Auction");
 const Bid = require("../models/Bid");
 const Payment = require("../models/Payment");
 const Notification = require("../models/Notification");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
 
 const generateToken = (user) => {
   return jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
@@ -87,30 +88,30 @@ const createProduct = async (input) => {
       .populate("category")
       .populate("subcategory")
       .populate("seller")
-      .exec();
+      .lean();
 
     if (!populatedProduct) {
       throw new Error("Product not found after creation");
     }
 
     return {
-      ...populatedProduct.toObject(),
+      ...populatedProduct,
       id: populatedProduct._id.toString(),
       category: populatedProduct.category
         ? {
-            ...populatedProduct.category.toObject(),
+            ...populatedProduct.category,
             id: populatedProduct.category._id.toString(),
           }
         : null,
       subcategory: populatedProduct.subcategory
         ? {
-            ...populatedProduct.subcategory.toObject(),
+            ...populatedProduct.subcategory,
             id: populatedProduct.subcategory._id.toString(),
           }
         : null,
       seller: populatedProduct.seller
         ? {
-            ...populatedProduct.seller.toObject(),
+            ...populatedProduct.seller,
             id: populatedProduct.seller._id.toString(),
           }
         : null,
@@ -123,8 +124,53 @@ const createProduct = async (input) => {
   }
 };
 
-const getProducts = async () =>
-  Product.find().populate("category").populate("subcategory");
+const getProducts = async () => {
+  const products = await Product.find()
+    .populate("category")
+    .populate("subcategory")
+    .populate("seller")
+    .lean();
+
+  return products.map((product) => ({
+    ...product,
+    id: product._id.toString(),
+    category: product.category
+      ? { ...product.category, id: product.category._id.toString() }
+      : null,
+    subcategory: product.subcategory
+      ? { ...product.subcategory, id: product.subcategory._id.toString() }
+      : null,
+    seller: product.seller
+      ? { ...product.seller, id: product.seller._id.toString() }
+      : null,
+  }));
+};
+
+const getProductById = async (id) => {
+  const product = await Product.findById(id)
+    .populate("category")
+    .populate("subcategory")
+    .populate("seller")
+    .lean();
+
+  if (!product) {
+    throw new Error("Product not found");
+  }
+
+  return {
+    ...product,
+    id: product._id.toString(),
+    category: product.category
+      ? { ...product.category, id: product.category._id.toString() }
+      : null,
+    subcategory: product.subcategory
+      ? { ...product.subcategory, id: product.subcategory._id.toString() }
+      : null,
+    seller: product.seller
+      ? { ...product.seller, id: product.seller._id.toString() }
+      : null,
+  };
+};
 
 const createCategory = async (name) => {
   const category = new Category({ name });
@@ -132,7 +178,17 @@ const createCategory = async (name) => {
   return category;
 };
 
-const getCategories = async () => Category.find();
+const getCategories = async () => {
+  const categories = await Category.find().lean();
+  return categories.map((category) => ({
+    ...category,
+    id: category._id.toString(),
+    subcategories: category.subcategories.map((subcat) => ({
+      ...subcat,
+      id: subcat._id.toString(),
+    })),
+  }));
+};
 
 const createOrder = async (buyerId, productId, amount, paymentId) => {
   const order = new Order({
@@ -145,8 +201,26 @@ const createOrder = async (buyerId, productId, amount, paymentId) => {
   return order;
 };
 
-const getOrders = async () =>
-  Order.find().populate("buyer").populate("product").populate("payment");
+const getOrders = async () => {
+  const orders = await Order.find()
+    .populate("buyer")
+    .populate("product")
+    .populate("payment")
+    .lean();
+  return orders.map((order) => ({
+    ...order,
+    id: order._id.toString(),
+    buyer: order.buyer
+      ? { ...order.buyer, id: order.buyer._id.toString() }
+      : null,
+    product: order.product
+      ? { ...order.product, id: order.product._id.toString() }
+      : null,
+    payment: order.payment
+      ? { ...order.payment, id: order.payment._id.toString() }
+      : null,
+  }));
+};
 
 const createFeedback = async (
   fromUserId,
@@ -166,8 +240,26 @@ const createFeedback = async (
   return feedback;
 };
 
-const getFeedbacks = async () =>
-  Feedback.find().populate("fromUser").populate("toUser").populate("product");
+const getFeedbacks = async () => {
+  const feedbacks = await Feedback.find()
+    .populate("fromUser")
+    .populate("toUser")
+    .populate("product")
+    .lean();
+  return feedbacks.map((feedback) => ({
+    ...feedback,
+    id: feedback._id.toString(),
+    fromUser: feedback.fromUser
+      ? { ...feedback.fromUser, id: feedback.fromUser._id.toString() }
+      : null,
+    toUser: feedback.toUser
+      ? { ...feedback.toUser, id: feedback.toUser._id.toString() }
+      : null,
+    product: feedback.product
+      ? { ...feedback.product, id: feedback.product._id.toString() }
+      : null,
+  }));
+};
 
 const createAuction = async (
   productId,
@@ -190,8 +282,23 @@ const createAuction = async (
   return auction;
 };
 
-const getAuctions = async () =>
-  Auction.find().populate("product").populate("bids");
+const getAuctions = async () => {
+  const auctions = await Auction.find()
+    .populate("product")
+    .populate("bids")
+    .lean();
+  return auctions.map((auction) => ({
+    ...auction,
+    id: auction._id.toString(),
+    product: auction.product
+      ? { ...auction.product, id: auction.product._id.toString() }
+      : null,
+    bids: auction.bids.map((bid) => ({
+      ...bid,
+      id: bid._id.toString(),
+    })),
+  }));
+};
 
 const placeBid = async (userId, productId, amount) => {
   const bid = new Bid({
@@ -205,7 +312,17 @@ const placeBid = async (userId, productId, amount) => {
   return bid;
 };
 
-const getBids = async () => Bid.find().populate("user").populate("product");
+const getBids = async () => {
+  const bids = await Bid.find().populate("user").populate("product").lean();
+  return bids.map((bid) => ({
+    ...bid,
+    id: bid._id.toString(),
+    user: bid.user ? { ...bid.user, id: bid.user._id.toString() } : null,
+    product: bid.product
+      ? { ...bid.product, id: bid.product._id.toString() }
+      : null,
+  }));
+};
 
 const createPayment = async (orderId, method, status, transactionId) => {
   const payment = new Payment({
@@ -218,7 +335,16 @@ const createPayment = async (orderId, method, status, transactionId) => {
   return payment;
 };
 
-const getPayments = async () => Payment.find().populate("order");
+const getPayments = async () => {
+  const payments = await Payment.find().populate("order").lean();
+  return payments.map((payment) => ({
+    ...payment,
+    id: payment._id.toString(),
+    order: payment.order
+      ? { ...payment.order, id: payment.order._id.toString() }
+      : null,
+  }));
+};
 
 const createNotification = async (userId, message) => {
   const notification = new Notification({
@@ -231,7 +357,16 @@ const createNotification = async (userId, message) => {
   return notification;
 };
 
-const getNotifications = async () => Notification.find().populate("user");
+const getNotifications = async () => {
+  const notifications = await Notification.find().populate("user").lean();
+  return notifications.map((notification) => ({
+    ...notification,
+    id: notification._id.toString(),
+    user: notification.user
+      ? { ...notification.user, id: notification.user._id.toString() }
+      : null,
+  }));
+};
 
 module.exports = {
   signup,
@@ -241,6 +376,7 @@ module.exports = {
   getUsers,
   createProduct,
   getProducts,
+  getProductById,
   createCategory,
   getCategories,
   createOrder,
