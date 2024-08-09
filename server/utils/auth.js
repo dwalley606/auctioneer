@@ -7,6 +7,9 @@ module.exports = {
   authMiddleware: function (req, res, next) {
     let token = req.headers.authorization;
 
+    // Log the entire request headers for debugging purposes
+    console.log("Request Headers:", JSON.stringify(req.headers, null, 2));
+
     if (token) {
       console.log("Received token:", token);
 

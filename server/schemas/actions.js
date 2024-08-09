@@ -78,33 +78,38 @@ const signout = async (req, res) => {
 const getUsers = async () => User.find();
 
 const getProductById = async (id) => {
-  const product = await Product.findById(id)
-    .populate("category")
-    .populate("subcategory")
-    .populate("seller")
-    .populate("auction")
-    .lean();
+  try {
+    const product = await Product.findById(id)
+      .populate("category")
+      .populate("subcategory")
+      .populate("seller")
+      .populate("auction")
+      .lean();
 
-  if (!product) {
-    throw new Error("Product not found");
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    return {
+      ...product,
+      id: product._id.toString(),
+      category: product.category
+        ? { ...product.category, id: product.category._id.toString() }
+        : null,
+      subcategory: product.subcategory
+        ? { ...product.subcategory, id: product.subcategory._id.toString() }
+        : null,
+      seller: product.seller
+        ? { ...product.seller, id: product.seller._id.toString() }
+        : null,
+      auction: product.auction
+        ? { ...product.auction, id: product.auction._id.toString() }
+        : null,
+    };
+  } catch (error) {
+    console.error("Error fetching product by ID:", error);
+    throw new ApolloError("Failed to fetch product", "PRODUCT_FETCH_ERROR");
   }
-
-  return {
-    ...product,
-    id: product._id.toString(),
-    category: product.category
-      ? { ...product.category, id: product.category._id.toString() }
-      : null,
-    subcategory: product.subcategory
-      ? { ...product.subcategory, id: product.subcategory._id.toString() }
-      : null,
-    seller: product.seller
-      ? { ...product.seller, id: product.seller._id.toString() }
-      : null,
-    auction: product.auction
-      ? { ...product.auction, id: product.auction._id.toString() }
-      : null,
-  };
 };
 
 const getCategories = async () => {
@@ -318,18 +323,31 @@ const createFeedback = async (
   rating,
   comment
 ) => {
-  const feedback = new Feedback({
-    fromUser: new mongoose.Types.ObjectId(fromUserId),
-    toUser: new mongoose.Types.ObjectId(toUserId),
-    product: new mongoose.Types.ObjectId(productId),
-    rating,
-    comment,
-  });
-  await feedback.save();
-  return feedback;
+  try {
+    const feedback = new Feedback({
+      fromUser: new mongoose.Types.ObjectId(fromUserId),
+      toUser: new mongoose.Types.ObjectId(toUserId),
+      product: new mongoose.Types.ObjectId(productId),
+      rating,
+      comment,
+    });
+    await feedback.save();
+    return feedback;
+  } catch (error) {
+    console.error("Error in createFeedback:", error);
+    throw new ApolloError(error.message, "INTERNAL_SERVER_ERROR", {
+      originalError: error,
+    });
+  }
 };
 
-const createAuction = async (productId, startTime, endTime, startingPrice, status) => {
+const createAuction = async (
+  productId,
+  startTime,
+  endTime,
+  startingPrice,
+  status
+) => {
   try {
     const product = await Product.findById(productId);
     if (!product) {
@@ -351,8 +369,6 @@ const createAuction = async (productId, startTime, endTime, startingPrice, statu
     throw error;
   }
 };
-
-
 
 const placeBid = async (userId, productId, amount) => {
   console.log(

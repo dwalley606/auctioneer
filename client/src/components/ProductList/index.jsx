@@ -92,7 +92,9 @@ const ProductList = () => {
           {products && products.length ? (
             <div className="products-grid">
               {filterProducts().map((product) => {
-                const auction = auctions.find((a) => a.product === product.id);
+                const auction = auctions.find(
+                  (a) => a.product.id === product.id
+                );
                 return (
                   <div key={product.id} className="product-card">
                     <a href={`/products/${product.id}`}>

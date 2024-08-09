@@ -27,7 +27,7 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
   const [createAuction] = useCreateAuction();
   const { product: updatedProduct, refetch } = useGetProductDetails(product.id);
   const auctions = useSelector(selectAuctions);
-  const auction = auctions.find((a) => a.product === product.id);
+  const auction = auctions.find((a) => a.product.id === product.id);
   const [highestBid, setHighestBid] = useState(0);
 
   useEffect(() => {
@@ -59,13 +59,13 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
     const totalDurationInSeconds =
       parseInt(duration.minutes, 10) * 60 + parseInt(duration.seconds, 10);
     try {
-      const startTime = dayjs().toDate(); // Convert to JavaScript Date object
-      const endTime = dayjs(startTime)
-        .add(totalDurationInSeconds, "second")
-        .toDate(); // Convert to JavaScript Date object
+      const startTime = new Date(); // Directly use JavaScript Date object
+      const endTime = new Date(
+        startTime.getTime() + totalDurationInSeconds * 1000
+      ); // Calculate end time
 
-      console.log("Start time:", startTime.toISOString());
-      console.log("End time:", endTime.toISOString());
+      console.log("Start time (Date object):", startTime);
+      console.log("End time (Date object):", endTime);
 
       const { data, errors } = await createAuction({
         variables: {
@@ -126,8 +126,7 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
         {auction && (
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Time Left:{" "}
-              <AuctionTimer date={dayjs(auction.endTime).toISOString()} />
+              Time Left: <AuctionTimer date={auction.endTime} />
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Highest Bid: ${highestBid.toFixed(2)}

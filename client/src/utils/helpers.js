@@ -81,3 +81,18 @@ export function convertTimestampToDate(timestamp) {
   const date = new Date(parseInt(timestamp, 10));
   return date.toLocaleString();
 }
+
+export const logRequestDetails = (
+  operationName,
+  headers,
+  timeLeft,
+  highestBidUser
+) => {
+  console.log(`Operation: ${operationName}`);
+  console.log("Request headers:", headers);
+  console.log("Current time left:", timeLeft, "seconds");
+  console.log(
+    "Current highest bid user:",
+    highestBidUser ? highestBidUser.username : "None"
+  );
+};
