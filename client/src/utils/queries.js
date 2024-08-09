@@ -166,3 +166,27 @@ export const GET_FEEDBACKS_BY_PRODUCT = gql`
     }
   }
 `;
+
+export const GET_PRODUCTS_BY_CATEGORY = gql`
+  query GetProductsByCategory($categoryId: ID!, $subcategoryId: ID) {
+    productsByCategory(categoryId: $categoryId, subcategoryId: $subcategoryId) {
+      id
+      name
+      description
+      price
+      image
+      category {
+        id
+        name
+      }
+      subcategory {
+        id
+        name
+      }
+      seller {
+        id
+        username
+      }
+    }
+  }
+`;

@@ -14,6 +14,7 @@ import App from "./App.jsx";
 import Contact from "./pages/contact.jsx";
 import ProductItem from "./components/ProductItem";
 import Posting from "./pages/Posting";
+import Categories from "./pages/categories.jsx"; // Import the Categories
 import { ProSidebarProvider } from "react-pro-sidebar";
 import { DashSidebarProvider } from "./components/Dashboard/Sidebar/sidebarContext";
 
@@ -63,6 +64,10 @@ const router = createBrowserRouter([
       {
         path: "posting",
         element: <Posting />,
+      },
+      {
+        path: "categories/:categoryId/:subcategoryId?", // Route for Categories
+        element: <Categories />,
       },
     ],
   },

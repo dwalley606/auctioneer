@@ -159,6 +159,14 @@ const resolvers = {
         },
       };
     },
+    productsByCategory: async (_, { categoryId, subcategoryId }) => {
+      console.log("Resolver: Fetching products by category and subcategory:", {
+        categoryId,
+        subcategoryId,
+      });
+
+      return actions.getProductsByCategory(categoryId, subcategoryId);
+    },
   },
   Mutation: {
     signup: async (_, { username, email, password }) =>

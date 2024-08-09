@@ -94,6 +94,7 @@ const typeDefs = gql`
 
   extend type Query {
     feedbacksByProduct(productId: ID!): [Feedback!]!
+    productsByCategory(categoryId: ID!, subcategoryId: ID): [Product!]!
   }
 
   extend type Mutation {

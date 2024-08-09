@@ -422,6 +422,51 @@ const createNotification = async (userId, message) => {
   };
 };
 
+const getProductsByCategory = async (categoryId, subcategoryId) => {
+  try {
+    console.log(
+      "Fetching products for category:",
+      categoryId,
+      "subcategory:",
+      subcategoryId
+    );
+
+    const query = { category: categoryId };
+    if (subcategoryId) {
+      query.subcategory = subcategoryId;
+    }
+
+    const products = await Product.find(query)
+      .populate("category")
+      .populate("subcategory")
+      .populate("seller")
+      .lean();
+
+    console.log("Fetched products:", products);
+
+    return products.map((product) => ({
+      ...product,
+      id: product._id.toString(),
+      category: product.category
+        ? { ...product.category, id: product.category._id.toString() }
+        : null,
+      subcategory: product.subcategory
+        ? { ...product.subcategory, id: product.subcategory._id.toString() }
+        : null,
+      seller: {
+        ...product.seller,
+        id: product.seller._id.toString(),
+      },
+    }));
+  } catch (error) {
+    console.error("Error fetching products by category:", error);
+    throw new ApolloError(
+      "Failed to fetch products by category",
+      "PRODUCTS_FETCH_ERROR"
+    );
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -445,4 +490,5 @@ module.exports = {
   getPayments,
   createNotification,
   getNotifications,
+  getProductsByCategory,
 };
