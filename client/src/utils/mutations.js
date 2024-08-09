@@ -232,31 +232,3 @@ export const UPDATE_PRODUCT = gql`
     }
   }
 `;
-
-export const CREATE_AUCTION = gql`
-  mutation CreateAuction(
-    $productId: ID!
-    $startTime: String!
-    $endTime: String!
-    $startingPrice: Float!
-    $status: String!
-  ) {
-    createAuction(
-      productId: $productId
-      startTime: $startTime
-      endTime: $endTime
-      startingPrice: $startingPrice
-      status: $status
-    ) {
-      id
-      product {
-        id
-        name
-      }
-      startTime
-      endTime
-      startingPrice
-      status
-    }
-  }
-`;
