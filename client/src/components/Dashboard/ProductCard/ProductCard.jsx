@@ -12,7 +12,6 @@ import {
   Modal,
   TextField,
 } from "@mui/material";
-import dayjs from "dayjs";
 import AuctionTimer from "./AuctionTimer";
 import { startAuction } from "../../../redux/auction/auctionSlice";
 import { useCreateAuction, useGetProductDetails } from "../../../utils/actions";
@@ -32,7 +31,7 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
 
   useEffect(() => {
     if (auction) {
-      setHighestBid(auction.startingPrice);
+      setHighestBid(auction.startingPrice || 0); // Default to 0 if startingPrice is undefined
     }
   }, [auction]);
 
@@ -121,7 +120,7 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
           {product.description}
         </Typography>
         <Typography variant="h6" color="text.primary">
-          ${product.price.toFixed(2)}
+          ${product.price ? product.price.toFixed(2) : "0.00"}
         </Typography>
         {auction && (
           <Box>
@@ -129,7 +128,7 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
               Time Left: <AuctionTimer date={auction.endTime} />
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Highest Bid: ${highestBid.toFixed(2)}
+              Highest Bid: ${highestBid ? highestBid.toFixed(2) : "0.00"}
             </Typography>
           </Box>
         )}
