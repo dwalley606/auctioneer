@@ -1,110 +1,157 @@
+/* Global Styles */
+body, html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  font-family: sans-serif;
+  box-sizing: border-box;
+}
 
-.products-container {
+* {
+  box-sizing: inherit;
+}
+
+/* ProductList Styles */
+.product-list-body {
+  margin: 0 auto;
+  padding: 0;
+  background: #fff;
+  width: 90%;
+}
+
+.product-list-content {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.product-list-header {
+  font-size: 42px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.product-list-products-container {
+  margin: 20px auto;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.product-list-category-section {
+  margin-bottom: 40px;
+}
+
+.product-list-category-title {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  color: #333;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.product-list-product-card {
+  padding: 15px;
+  text-align: center;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  height: 480px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  background-color: #f7fafc;
-}
-
-.products-header {
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 1.25rem 5rem;
 }
 
-.products-title {
-  font-size: 2rem;
-  text-transform: uppercase;
-  font-weight: bold;
-  margin-top: 2.5rem;
-  text-align: center;
-  margin-bottom: 2.5rem;
-}
-
-.products-cart-button {
-  padding: 0.5rem 1rem;
-  background-color: #333;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-.products-cart-button:hover {
-  background-color: #555;
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: 1rem;
-  padding: 2.5rem;
-}
-
-.product-card {
-  background-color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-radius: 0.5rem;
-  padding: 2.5rem;
-}
-
-.product-image {
+.product-list-product-image {
   width: 100%;
-  height: 200px;
-  object-fit: cover;
+  height: 250px; 
+  object-fit: contain;
+  border-radius: 8px;
 }
 
-.product-info {
-  margin-top: 1rem;
+.product-list-product-info {
+  text-align: center;
+  flex-grow: 1;
 }
 
-.product-title {
-  font-size: 1.125rem;
-  text-transform: uppercase;
+.product-list-product-title {
+  font-size: 1.2rem;
+  margin: 10px 0;
   font-weight: bold;
 }
 
-.product-description {
-  margin-top: 0.5rem;
-  color: #718096;
-  font-size: 0.875rem;
+.product-list-product-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 10px 0;
 }
 
-.product-price {
-  margin-top: 0.5rem;
-  color: #718096;
+.product-list-product-price {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 10px 0;
+  color: #007bff;
 }
 
-.product-actions {
-  margin-top: 1.5rem;
+.product-list-product-auction {
+  color: #ff0000;
+  font-weight: bold;
+  margin: 5px 0;
+}
+
+.product-list-product-actions {
+  margin-top: 10px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.product-button {
-  padding: 0.5rem 1rem;
-  background-color: #333;
+.product-list-product-button,
+.product-list-product-details-button {
+  background-color: #007bff;
   color: white;
-  font-size: 0.75rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  border-radius: 0.25rem;
+  border: none;
+  padding: 8px 16px;
   cursor: pointer;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+  text-align: center;
 }
 
-.product-button:hover {
-  background-color: #555;
+.product-list-product-button:hover,
+.product-list-product-details-button:hover {
+  background-color: #0056b3;
 }
 
-.product-quantity {
-  display: flex;
-  gap: 1rem;
+/* Slick Slider Arrow Styles */
+.slick-next:before,
+.slick-prev:before {
+  content: "" !important;
 }
 
-.product-quantity-text {
-  color: #718096;
+.next-slick-arrow,
+.prev-slick-arrow {
+  color: #000000;
+  font-size: 45px;
+  z-index: 5; /* Ensure arrows are on top of other elements */
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.slick-next {
+  right: 10px !important;
+  z-index: 5; /* Ensure visibility over other elements */
+}
+
+.slick-prev {
+  left: 10px !important;
+  z-index: 5; /* Ensure visibility over other elements */
+}
+
+.slick-next:hover .next-slick-arrow,
+.slick-prev:hover .prev-slick-arrow {
+  color: #007bff;
 }
