@@ -1,14 +1,18 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
 import spinner from "../../assets/spinner.gif";
-import "react-toastify/dist/ReactToastify.css";
 import { fetchProducts } from "../../redux/products/productsSlice";
 import {
   addToCart,
   removeFromCart,
   selectCartItems,
 } from "../../redux/cart/cartSlice";
+import { selectAuctions } from "../../redux/auction/auctionSlice";
 import "./ProductList.css";
 import socket from "../../utils/socket";
 
@@ -19,15 +23,13 @@ const ProductList = () => {
     loading,
     error,
   } = useSelector((state) => state.products);
-  const { currentCategory } = useSelector((state) => state.categories);
   const cartItems = useSelector(selectCartItems);
+  const auctions = useSelector(selectAuctions);
 
   useEffect(() => {
-    console.log("Fetching products...");
     dispatch(fetchProducts());
 
     socket.on("bidChange", (data) => {
-      console.log("Received bidChange event:", data);
       dispatch(fetchProducts());
     });
 
@@ -36,13 +38,16 @@ const ProductList = () => {
     };
   }, [dispatch]);
 
-  const filterProducts = () => {
-    if (!currentCategory) {
-      return products;
-    }
-    return products.filter(
-      (product) => product.category.name === currentCategory
-    );
+  const groupProductsByCategory = () => {
+    const groupedProducts = {};
+    products.forEach((product) => {
+      const categoryName = product.category.name;
+      if (!groupedProducts[categoryName]) {
+        groupedProducts[categoryName] = [];
+      }
+      groupedProducts[categoryName].push(product);
+    });
+    return groupedProducts;
   };
 
   const notifyAddedToCart = (item) => {
@@ -62,97 +67,104 @@ const ProductList = () => {
   };
 
   const handleAddToCart = (product) => {
-    console.log(`Adding product ${product.name} to cart.`);
     dispatch(addToCart(product));
     notifyAddedToCart(product);
   };
 
   const handleRemoveFromCart = (product) => {
-    console.log(`Removing product ${product.name} from cart.`);
     dispatch(removeFromCart(product));
   };
 
   const handleImageError = (event) => {
-    console.log("Image not available, setting placeholder.");
     event.target.src =
       "https://via.placeholder.com/200x300.png?text=Image+Not+Available";
   };
 
+  const groupedProducts = groupProductsByCategory();
+
+  const settings = {
+    dots: true,
+    infinite: true,
+    slidesToShow: 3,
+    slidesToScroll: 1,
+    
+    nextArrow: (
+      <div>
+        <div className="next-slick-arrow"> ⫸ </div>
+      </div>
+    ),
+    prevArrow: (
+      <div>
+        <div className="prev-slick-arrow"> ⫷ </div>
+      </div>
+    ),
+  };
+
   return (
-    <div className="products-container">
+    <div className="product-list-products-container">
       <ToastContainer />
-      <h2>Our Products:</h2>
+      <h2 className="product-list-header">Our Products:</h2>
       {error && <p>Error: {error}</p>}
       {loading ? (
         <img src={spinner} alt="loading" />
-      ) : (
-        <>
-          {products && products.length ? (
-            <div className="products-grid">
-              {filterProducts().map((product) => (
-                <div key={product.id} className="product-card">
-                  <a href={`/products/${product.id}`}>
+      ) : Object.keys(groupedProducts).length > 0 ? (
+        Object.keys(groupedProducts).map((category) => (
+          <div key={category} className="product-list-category-section">
+            <h3 className="product-list-category-title">Shop {category}</h3>
+            <Slider {...settings}>
+              {groupedProducts[category].map((product) => {
+                const auction = auctions.find(
+                  (a) => a.product.id === product.id
+                );
+                return (
+                  <div
+                    key={product.id}
+                    className="product-list-product-card product-list-container"
+                  >
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="product-image"
+                      className="product-list-product-image product-list-img"
                       onError={handleImageError}
                     />
-                  </a>
-                  <div className="product-info">
-                    <h1 className="product-title">{product.name}</h1>
-                    <p className="product-description">
-                      {product.description.slice(0, 40)}...
-                    </p>
-                    <p className="product-price">${product.price}</p>
-                  </div>
-                  <div className="product-actions">
-                    {!cartItems.find((item) => item.id === product.id) ? (
+                    <div className="product-list-product-info product-list-title">
+                      <h1 className="product-list-product-title">
+                        {product.name}
+                      </h1>
+                      <p className="product-list-product-description product-list-description">
+                        {product.description.slice(0, 40)}...
+                      </p>
+                      <p className="product-list-product-price">
+                        ${product.price}
+                      </p>
+                      {auction && auction.status === "active" && (
+                        <p className="product-list-product-auction">
+                          Auction Active: Highest Bid ${auction.highestBid}
+                        </p>
+                      )}
+                    </div>
+                    <div className="product-list-product-actions">
                       <button
-                        className="product-button"
+                        className="product-list-product-button"
                         onClick={() => handleAddToCart(product)}
                       >
                         Add to cart
                       </button>
-                    ) : (
-                      <div className="product-quantity">
-                        <button
-                          className="product-button"
-                          onClick={() => handleAddToCart(product)}
-                        >
-                          +
-                        </button>
-                        <p className="product-quantity-text">
-                          {
-                            cartItems.find((item) => item.id === product.id)
-                              .quantity
-                          }
-                        </p>
-                        <button
-                          className="product-button"
-                          onClick={() => {
-                            const cartItem = cartItems.find(
-                              (item) => item.id === product.id
-                            );
-                            if (cartItem.quantity === 1) {
-                              handleRemoveFromCart(product);
-                            } else {
-                              dispatch(removeFromCart(product));
-                            }
-                          }}
-                        >
-                          -
-                        </button>
-                      </div>
-                    )}
+                      <a
+                        href={`/products/${product.id}`}
+                        className="product-list-product-details-button"
+                      >
+                        View Product Details
+                      </a>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <h3>No products available.</h3>
-          )}
-        </>
+                );
+              })}
+            </Slider>
+          </div>
+        ))
+      ) : (
+        <h3>No products available.</h3>
       )}
     </div>
   );

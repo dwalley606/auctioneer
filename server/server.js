@@ -20,14 +20,10 @@ dotenv.config();
 const PORT = process.env.PORT || 3001;
 const app = express();
 
-const apolloServer = new ApolloServer({
-  typeDefs,
-  resolvers,
-  csrfPrevention: true,
-});
-
+// Create an HTTP server
 const httpServer = http.createServer(app);
 
+// Setup Socket.IO server with CORS configuration
 const io = new Server(httpServer, {
   cors: {
     origin: ["http://localhost:3000", "https://localhost:3000"],
@@ -35,46 +31,59 @@ const io = new Server(httpServer, {
   },
 });
 
+// Socket.IO connection events
 io.on("connection", (socket) => {
   console.log("A user connected");
+
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
 });
 
+// Create an Apollo Server instance
+const apolloServer = new ApolloServer({
+  typeDefs,
+  resolvers,
+  csrfPrevention: true,
+});
+
+// Function to start the Apollo Server
 const startApolloServer = async () => {
   try {
     await apolloServer.start();
 
+    // Middleware for CORS, JSON parsing, cookies, and static files
     app.use(
       cors({
         origin: ["http://localhost:3000", "https://localhost:3000"],
         credentials: true,
       })
     );
-
     app.use(express.json());
     app.use(cookieParser());
-
     app.use(
       "/images",
       express.static(path.join(__dirname, "../client/images"))
     );
-
     app.use(graphqlUploadExpress());
 
-    app.use("/graphql", authMiddleware); // Use auth middleware only for GraphQL
-
+    // Apply authentication middleware and Apollo GraphQL middleware
+    app.use("/graphql", authMiddleware);
     app.use(
       "/graphql",
       expressMiddleware(apolloServer, {
         context: ({ req }) => {
           console.log("GraphQL request context user:", req.user);
+          console.log(
+            "GraphQL request body:",
+            JSON.stringify(req.body, null, 2)
+          );
           return { user: req.user };
         },
       })
     );
 
+    // Route for Google authentication
     app.post("/graphql/auth/google", async (req, res) => {
       try {
         const { token } = req.body;
@@ -89,6 +98,7 @@ const startApolloServer = async () => {
       }
     });
 
+    // Route for user signout
     app.post("/user/signout", async (req, res) => {
       try {
         await signout(req, res);
@@ -99,6 +109,7 @@ const startApolloServer = async () => {
       }
     });
 
+    // Serve static files in production
     if (process.env.NODE_ENV === "production") {
       app.use(express.static(path.join(__dirname, "../client/dist")));
       app.get("*", (req, res) => {
@@ -106,11 +117,14 @@ const startApolloServer = async () => {
       });
     }
 
+    // Start the database and server
     db.once("open", () => {
       httpServer.listen(PORT, () => {
         console.log(`API server running on port ${PORT}!`);
         console.log(`Use GraphQL at http://localhost:${PORT}/graphql`);
       });
+
+      // Start polling for changes
       pollForChanges(io).catch((err) =>
         console.error("Failed to poll for changes: ", err)
       );
@@ -120,6 +134,7 @@ const startApolloServer = async () => {
   }
 };
 
+// Start the Apollo Server
 startApolloServer().catch((error) => {
   console.error("Failed to start server: ", error);
 });

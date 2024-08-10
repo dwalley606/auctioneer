@@ -84,10 +84,21 @@ const typeDefs = gql`
 
   type Feedback {
     id: ID!
-    user: User!
-    product: Product!
     rating: Int!
-    comment: String!
+    comment: String
+    fromUser: User!
+    toUser: User!
+    product: Product!
+    createdAt: String!
+  }
+
+  extend type Query {
+    feedbacksByProduct(productId: ID!): [Feedback!]!
+    productsByCategory(categoryId: ID!, subcategoryId: ID): [Product!]!
+  }
+
+  extend type Mutation {
+    createFeedback(productId: ID!, rating: Int!, comment: String): Feedback!
   }
 
   type Auction {
@@ -96,7 +107,9 @@ const typeDefs = gql`
     startTime: String!
     endTime: String!
     startingPrice: Float!
-    bids: [Bid]
+    highestBid: Float
+    highestBidUser: User
+    bids: [Bid!]!
     status: String!
   }
 
@@ -137,6 +150,7 @@ const typeDefs = gql`
     payments: [Payment]
     notifications: [Notification]
     userProfile: User
+    userAuctions: [Auction!]!
   }
 
   type Mutation {

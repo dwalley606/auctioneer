@@ -10,6 +10,7 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutlined";
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
+import LocalAtmOutlinedIcon from "@mui/icons-material/LocalAtmOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import SwitchRightOutlinedIcon from "@mui/icons-material/SwitchRightOutlined";
@@ -200,6 +201,13 @@ const DashSidebar = () => {
               title="Messages"
               to="/dashboard?tab=messages"
               icon={<TimelineOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Auctions"
+              to="/dashboard?tab=auctions"
+              icon={<LocalAtmOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />

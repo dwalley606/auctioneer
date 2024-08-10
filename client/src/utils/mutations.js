@@ -158,3 +158,27 @@ export const CREATE_AUCTION = gql`
     }
   }
 `;
+
+export const CREATE_FEEDBACK = gql`
+  mutation CreateFeedback($productId: ID!, $rating: Int!, $comment: String) {
+    createFeedback(productId: $productId, rating: $rating, comment: $comment) {
+      id
+      rating
+      comment
+      fromUser {
+        id
+        username
+      }
+      toUser {
+        id
+        username
+      }
+      product {
+        id
+        name
+      }
+      createdAt
+    }
+  }
+`;
+

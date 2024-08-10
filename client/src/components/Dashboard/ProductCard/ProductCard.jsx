@@ -12,7 +12,6 @@ import {
   Modal,
   TextField,
 } from "@mui/material";
-import dayjs from "dayjs";
 import AuctionTimer from "./AuctionTimer";
 import { startAuction } from "../../../redux/auction/auctionSlice";
 import { useCreateAuction, useGetProductDetails } from "../../../utils/actions";
@@ -32,7 +31,7 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
 
   useEffect(() => {
     if (auction) {
-      setHighestBid(auction.startingPrice);
+      setHighestBid(auction.startingPrice || 0); // Default to 0 if startingPrice is undefined
     }
   }, [auction]);
 
@@ -59,13 +58,13 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
     const totalDurationInSeconds =
       parseInt(duration.minutes, 10) * 60 + parseInt(duration.seconds, 10);
     try {
-      const startTime = dayjs().toDate(); // Convert to JavaScript Date object
-      const endTime = dayjs(startTime)
-        .add(totalDurationInSeconds, "second")
-        .toDate(); // Convert to JavaScript Date object
+      const startTime = new Date(); // Directly use JavaScript Date object
+      const endTime = new Date(
+        startTime.getTime() + totalDurationInSeconds * 1000
+      ); // Calculate end time
 
-      console.log("Start time:", startTime.toISOString());
-      console.log("End time:", endTime.toISOString());
+      console.log("Start time (Date object):", startTime);
+      console.log("End time (Date object):", endTime);
 
       const { data, errors } = await createAuction({
         variables: {
@@ -121,16 +120,15 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
           {product.description}
         </Typography>
         <Typography variant="h6" color="text.primary">
-          ${product.price.toFixed(2)}
+          ${product.price ? product.price.toFixed(2) : "0.00"}
         </Typography>
         {auction && (
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Time Left:{" "}
-              <AuctionTimer date={dayjs(auction.endTime).toISOString()} />
+              Time Left: <AuctionTimer date={auction.endTime} />
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Highest Bid: ${highestBid.toFixed(2)}
+              Highest Bid: ${highestBid ? highestBid.toFixed(2) : "0.00"}
             </Typography>
           </Box>
         )}

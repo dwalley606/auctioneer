@@ -4,6 +4,7 @@ import DashComponent from "../components/Dashboard/Component/DashComponent";
 import DashProfile from "../components/Dashboard/Profile/DashProfile";
 import DashProducts from "../components/Dashboard/Products/Products";
 import DashMessages from "../components/Dashboard/Messages/DashMessages";
+import DashAuctions from "../components/Dashboard/Auctions/DashAuctions";
 import Topbar from "../components/Dashboard/Topbar/Topbar";
 import "./css/Dashboard.css";
 
@@ -38,6 +39,7 @@ export default function Dashboard() {
           {tab === "profile" && <DashProfile />}
           {tab === "products" && <DashProducts />}
           {tab === "messages" && <DashMessages />}
+          {tab === "auctions" && <DashAuctions />}
         </div>
       </div>
     </div>

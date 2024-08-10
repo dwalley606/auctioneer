@@ -4,16 +4,21 @@ const {
   UserInputError,
 } = require("apollo-server-express");
 const mongoose = require("mongoose");
-const { Product, User, Category, Subcategory } = require("../models");
 const actions = require("./actions");
+
+// Import necessary models
+const Product = require("../models/Product");
+const Feedback = require("../models/Feedback");
+const User = require("../models/User");
 
 const resolvers = {
   Query: {
     users: async (_, __, context) => {
-      if (!context.user)
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      }
       return actions.getUsers();
     },
     products: async () => {
@@ -21,10 +26,12 @@ const resolvers = {
       return products.map((product) => ({
         ...product,
         id: product._id.toString(),
-        category: {
-          ...product.category,
-          id: product.category._id.toString(),
-        },
+        category: product.category
+          ? {
+              ...product.category,
+              id: product.category._id.toString(),
+            }
+          : null,
         subcategory: product.subcategory
           ? {
               ...product.subcategory,
@@ -40,31 +47,65 @@ const resolvers = {
     categories: async () => actions.getCategories(),
     category: async (_, { id }) => {
       const category = await actions.getCategoryById(id);
+      if (!category) {
+        throw new Error("Category not found");
+      }
       return {
         ...category,
         id: category._id.toString(),
       };
     },
     orders: async (_, __, context) => {
-      if (!context.user)
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      }
       return actions.getOrders();
     },
     feedbacks: async () => actions.getFeedbacks(),
+    feedbacksByProduct: async (_, { productId }) => {
+      const feedbacks = await actions.getFeedbacksByProduct(productId);
+      return feedbacks.map((feedback) => ({
+        ...feedback,
+        id: feedback._id.toString(),
+        fromUser: {
+          ...feedback.fromUser,
+          id: feedback.fromUser._id.toString(),
+        },
+        toUser: {
+          ...feedback.toUser,
+          id: feedback.toUser._id.toString(),
+        },
+        product: {
+          ...feedback.product,
+          id: feedback.product._id.toString(),
+        },
+        createdAt: feedback.createdAt.toISOString(),
+      }));
+    },
     auctions: async () => {
       const auctions = await actions.getAuctions();
-      return auctions.map((auction) => ({
-        ...auction,
-        id: auction._id.toString(),
-        product: {
-          ...auction.product,
-          id: auction.product._id.toString(),
-        },
-        startTime: auction.startTime ? auction.startTime.toISOString() : null,
-        endTime: auction.endTime ? auction.endTime.toISOString() : null,
-      }));
+      return auctions
+        .map((auction) => {
+          if (!auction.product || !auction.product._id) {
+            console.error("Invalid auction data:", auction);
+            return null;
+          }
+          return {
+            ...auction,
+            id: auction._id.toString(),
+            product: {
+              ...auction.product,
+              id: auction.product._id.toString(),
+            },
+            startTime: auction.startTime
+              ? auction.startTime.toISOString()
+              : null,
+            endTime: auction.endTime ? auction.endTime.toISOString() : null,
+          };
+        })
+        .filter((auction) => auction !== null); // Remove invalid entries
     },
     bids: async () => {
       const bids = await actions.getBids();
@@ -77,29 +118,35 @@ const resolvers = {
       }));
     },
     payments: async (_, __, context) => {
-      if (!context.user)
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      }
       return actions.getPayments();
     },
     notifications: async (_, __, context) => {
-      if (!context.user)
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      }
       return actions.getNotifications();
     },
     product: async (_, { id }) => {
       const product = await actions.getProductById(id);
-      if (!product) throw new Error("Product not found");
+      if (!product) {
+        throw new Error("Product not found");
+      }
       return {
         ...product,
         id: product._id.toString(),
-        category: {
-          ...product.category,
-          id: product.category._id.toString(),
-        },
+        category: product.category
+          ? {
+              ...product.category,
+              id: product.category._id.toString(),
+            }
+          : null,
         subcategory: product.subcategory
           ? {
               ...product.subcategory,
@@ -111,6 +158,14 @@ const resolvers = {
           id: product.seller._id.toString(),
         },
       };
+    },
+    productsByCategory: async (_, { categoryId, subcategoryId }) => {
+      console.log("Resolver: Fetching products by category and subcategory:", {
+        categoryId,
+        subcategoryId,
+      });
+
+      return actions.getProductsByCategory(categoryId, subcategoryId);
     },
   },
   Mutation: {
@@ -191,10 +246,14 @@ const resolvers = {
       }
     },
     deleteProduct: async (_, { id }, context) => {
-      if (!context.user) throw new AuthenticationError("Not authenticated");
+      if (!context.user) {
+        throw new AuthenticationError("Not authenticated");
+      }
       try {
         const product = await Product.findByIdAndDelete(id);
-        if (!product) throw new Error("Product not found");
+        if (!product) {
+          throw new Error("Product not found");
+        }
         return product;
       } catch (error) {
         throw new ApolloError(error.message, "INTERNAL_SERVER_ERROR", {
@@ -203,88 +262,120 @@ const resolvers = {
       }
     },
     createCategory: async (_, { name }, context) => {
-      if (!context.user)
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      }
       return actions.createCategory(name);
     },
     createOrder: async (_, { productId, amount }, context) => {
-      if (!context.user)
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      }
       return actions.createOrder(context.user.id, productId, amount);
     },
     createFeedback: async (_, { productId, rating, comment }, context) => {
-      if (!context.user)
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
-      return actions.createFeedback(
-        context.user.id,
-        productId,
-        rating,
-        comment
-      );
+      }
+
+      // Validate rating
+      if (rating < 1 || rating > 5) {
+        throw new UserInputError("Rating must be between 1 and 5");
+      }
+
+      // Fetch the product to get the seller
+      const product = await Product.findById(productId).populate("seller");
+      if (!product) {
+        console.error("Product not found for feedback submission");
+        throw new Error("Product not found");
+      }
+
+      try {
+        const feedback = await actions.createFeedback(
+          context.user.id,
+          product.seller._id,
+          productId,
+          rating,
+          comment
+        );
+
+        return {
+          ...feedback._doc,
+          id: feedback._id.toString(),
+          fromUser: context.user,
+          toUser: product.seller,
+          product,
+          createdAt: feedback.createdAt.toISOString(),
+        };
+      } catch (error) {
+        console.error("Error in createFeedback resolver:", error);
+        throw new ApolloError(
+          "Failed to create feedback",
+          "FEEDBACK_CREATION_ERROR",
+          {
+            originalError: error,
+          }
+        );
+      }
     },
+
     createAuction: async (
-  _,
-  { productId, startTime, endTime, startingPrice, status },
-  context
-) => {
-  if (!context.user) {
-    throw new AuthenticationError(
-      "You must be logged in to perform this action"
-    );
-  }
-
-  try {
-    console.log("Received startTime:", startTime);
-    console.log("Received endTime:", endTime);
-
-    // Ensure startTime and endTime are Date objects
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      throw new UserInputError("Invalid date format for startTime or endTime");
-    }
-
-    console.log("Converted startTime to Date:", start);
-    console.log("Converted endTime to Date:", end);
-
-    const auction = await actions.createAuction(
-      productId,
-      start,
-      end,
-      startingPrice,
-      status
-    );
-
-    // Convert ObjectId fields to string and ensure dates are in ISO format
-    return {
-      ...auction.toObject(), // Convert Mongoose document to plain object
-      id: auction._id.toString(),
-      product: auction.product.toString(),
-      startTime: auction.startTime.toISOString(),
-      endTime: auction.endTime.toISOString(),
-    };
-  } catch (error) {
-    console.error("Error in createAuction resolver:", error);
-    throw new ApolloError(
-      "Failed to create auction",
-      "AUCTION_CREATION_ERROR",
-      { error }
-    );
-  }
-},
-
-    placeBid: async (_, { productId, amount }, context) => {
-      if (!context.user)
+      _,
+      { productId, startTime, endTime, startingPrice, status },
+      context
+    ) => {
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      }
+
+      try {
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+          throw new UserInputError(
+            "Invalid date format for startTime or endTime"
+          );
+        }
+
+        const auction = await actions.createAuction(
+          productId,
+          start,
+          end,
+          startingPrice,
+          status
+        );
+
+        return {
+          ...auction.toObject(),
+          id: auction._id.toString(),
+          product: auction.product.toString(),
+          startTime: auction.startTime.toISOString(),
+          endTime: auction.endTime.toISOString(),
+        };
+      } catch (error) {
+        console.error("Error in createAuction resolver:", error);
+        throw new ApolloError(
+          "Failed to create auction",
+          "AUCTION_CREATION_ERROR",
+          { error }
+        );
+      }
+    },
+    placeBid: async (_, { productId, amount }, context) => {
+      if (!context.user) {
+        throw new AuthenticationError(
+          "You must be logged in to perform this action"
+        );
+      }
       const bid = await actions.placeBid(context.user.id, productId, amount);
 
       // Convert ObjectId fields to string
@@ -300,10 +391,11 @@ const resolvers = {
       { orderId, method, status, transactionId },
       context
     ) => {
-      if (!context.user)
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      }
       const payment = await actions.createPayment(
         orderId,
         method,
@@ -311,30 +403,30 @@ const resolvers = {
         transactionId
       );
 
-      // Convert ObjectId fields to string
       payment.id = payment._id.toString();
       payment.order = payment.order.toString();
 
       return payment;
     },
     createNotification: async (_, { userId, message }, context) => {
-      if (!context.user)
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      }
       const notification = await actions.createNotification(userId, message);
 
-      // Convert ObjectId fields to string
       notification.id = notification._id.toString();
       notification.user = notification.user.toString();
 
       return notification;
     },
     updateUserProfile: async (_, { input }, context) => {
-      if (!context.user)
+      if (!context.user) {
         throw new AuthenticationError(
           "You must be logged in to perform this action"
         );
+      }
       return actions.updateUserProfile(context.user.id, input);
     },
   },

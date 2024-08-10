@@ -77,8 +77,10 @@ export const fetchProducts = createAsyncThunk(
           headers: getAuthHeaders(),
         },
       });
+      console.log("Fetched products:", data.products);
       return data.products;
     } catch (error) {
+      console.error("Error fetching products:", error);
       return thunkAPI.rejectWithValue(error.message);
     }
   }
@@ -130,14 +132,20 @@ export const deleteProduct = createAsyncThunk(
   "products/deleteProduct",
   async (id, { rejectWithValue }) => {
     try {
-      await client.mutate({
+      const response = await client.mutate({
         mutation: DELETE_PRODUCT,
         variables: { id },
         context: {
           headers: getAuthHeaders(),
         },
       });
-      return id;
+
+      if (response.data.deleteProduct) {
+        console.log("Deleted product with ID:", id);
+        return id;
+      } else {
+        throw new Error("Failed to delete product");
+      }
     } catch (error) {
       console.error("Error in deleteProduct thunk:", error);
       return rejectWithValue(
@@ -169,6 +177,7 @@ export const updateProduct = createAsyncThunk(
         },
       });
 
+      console.log("Updated product:", response.data.updateProduct);
       return response.data.updateProduct;
     } catch (error) {
       console.error("Error in updateProduct thunk:", error);

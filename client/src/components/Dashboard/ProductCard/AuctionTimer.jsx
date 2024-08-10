@@ -1,16 +1,30 @@
 import dayjs from "dayjs";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTimer } from "react-timer-hook";
 import PropTypes from "prop-types";
 
 const AuctionTimer = ({ date }) => {
   const [expired, setExpired] = useState(false);
-  const expiryDate = dayjs(date).toDate();
+  const expiryDate = new Date(date);
 
-   const { seconds, minutes, hours, days } = useTimer({
-     expiryTimestamp: expiryDate,
-     onExpire: () => setExpired(true),
-   });
+  console.log("Auction end time:", expiryDate);
+
+  const { seconds, minutes, hours, days } = useTimer({
+    expiryTimestamp: expiryDate,
+    onExpire: () => {
+      console.log("Auction has expired.");
+      setExpired(true);
+    },
+  });
+
+  useEffect(() => {
+    if (expired) {
+      console.log(
+        "Auction expired on:",
+        dayjs(date).format("DD MMM YYYY HH:mm:ss")
+      );
+    }
+  }, [expired, date]);
 
   if (expired) {
     return `Expired on ${dayjs(date).format("DD MMM YYYY HH:mm:ss")}`;
