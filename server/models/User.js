@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const { Schema } = mongoose;
-
 const userSchema = new Schema({
   username: {
     type: String,
@@ -52,21 +51,19 @@ const userSchema = new Schema({
     default: Date.now,
   },
 });
-
 userSchema.pre("save", async function (next) {
   if (this.isNew || this.isModified("password")) {
     if (this.password) {
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(this.password, saltRounds);
-      console.log("Pre-save hook - Hashed Password:", hashedPassword);
+      console.log("Pre-save hook - Hashed Password:", hashedPassword); // Debug Line
       this.password = hashedPassword;
     }
   }
   next();
 });
-
 userSchema.methods.isCorrectPassword = async function (password) {
-  console.log("Comparing password:", password, "with hashed:", this.password);
+  console.log("Comparing password:", password, "with hashed:", this.password); // Debug Line
   try {
     const match = await bcrypt.compare(password, this.password);
     console.log("Password comparison result:", match);
@@ -76,6 +73,5 @@ userSchema.methods.isCorrectPassword = async function (password) {
     throw error;
   }
 };
-
 const User = mongoose.model("User", userSchema);
 module.exports = User;

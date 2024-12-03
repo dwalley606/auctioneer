@@ -9,13 +9,11 @@ mongoose.connect(
 mongoose.connection.on("connected", () => {
   console.log("Mongoose connected to MongoDB");
 });
-
 mongoose.connection.on("error", (err) => {
   console.error("Mongoose connection error:", err);
 });
-
 mongoose.connection.on("disconnected", () => {
   console.log("Mongoose disconnected from MongoDB");
 });
-
-module.exports = mongoose.connection;
+console.log('MongoDB URI:' , process.env.MONGODB_URI);
+module.exports = mongoose.connection; 

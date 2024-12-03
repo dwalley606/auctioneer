@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
+import './css/currentBids.css';
 
 const CurrentBids = () => {
   const [bids, setBids] = useState([]);
@@ -22,7 +23,7 @@ const CurrentBids = () => {
   }, []);
 
   return (
-    <div>
+    <div className='current'>
       <h1>Current Bids</h1>
       {bids.length === 0 ? (
         <p>No bids found.</p>
